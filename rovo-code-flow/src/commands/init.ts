@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 import { Config } from '../config';
 import { MemoryFileManager } from '../memory-file';
 import { AcliIntegration } from '../acli-integration';

@@ -124,7 +124,7 @@ export class MemoryFileManager {
 - **Version**: ${packageJson.version || 'Unknown'}
 - **Main technologies**: ${Object.keys(packageJson.dependencies || {}).join(', ')}
 `;
-        } catch (e) {
+        } catch (_e) {
           packageInfo = '';
         }
       }
@@ -252,7 +252,7 @@ This file contains your personal instructions specific to this repository when u
       }
       
       return result;
-    } catch (error) {
+    } catch (_error) {
       return '';
     }
   }

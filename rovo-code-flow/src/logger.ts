@@ -98,7 +98,7 @@ export class Logger {
           }
           return String(arg);
         }).join(' ');
-      } catch (error) {
+      } catch (_error) {
         formattedMessage += ' [Error formatting args]';
       }
     }

@@ -413,7 +413,7 @@ export class UserService {
     } catch (error) {
       // Fallback to simple hashing if crypto is not available
       console.warn('Using fallback password hashing - not secure for production');
-      return `hashed_${ password } `;
+      return `hashed_${password}`;
     }
   }
   
@@ -435,11 +435,11 @@ export class UserService {
       }
       
       // Fallback for simple hashing
-      return hashedPassword === `hashed_${ password } `;
+      return hashedPassword === `hashed_${password}`;
     } catch (error) {
       // Fallback to simple verification if crypto is not available
       console.warn('Using fallback password verification - not secure for production');
-      return hashedPassword === `hashed_${ password } `;
+      return hashedPassword === `hashed_${password}`;
     }
   }
 }`;

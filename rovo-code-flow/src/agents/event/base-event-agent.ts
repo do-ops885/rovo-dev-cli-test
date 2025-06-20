@@ -55,6 +55,7 @@ export abstract class BaseEventAgent implements Agent {
     const startTime = new Date();
     const taskId = generateId();
     const taskDescription = typeof task === 'string' ? task : task.description;
+    // Using taskDescription for logging and history
     
     // Create task history entry
     this.taskHistory.push({

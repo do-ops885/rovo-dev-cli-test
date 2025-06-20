@@ -4,7 +4,6 @@
 
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { spawn } from 'child_process';
 import { AcliIntegration } from '../acli-integration';
 import { sessionsCommand } from './sessions';
 import { instructionsCommand } from './instructions';

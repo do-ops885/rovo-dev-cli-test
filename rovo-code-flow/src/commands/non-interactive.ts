@@ -71,7 +71,7 @@ async function startMcpServers(): Promise<void> {
   
   console.log(chalk.blue('Starting MCP servers...'));
   
-  for (const [name, _] of Object.entries(servers)) {
+  for (const name of Object.keys(servers)) {
     mcpManager.startServer(name);
   }
   

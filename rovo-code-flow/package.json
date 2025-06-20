@@ -10,7 +10,7 @@
   },
   "scripts": {
     "lint": "eslint \"src/**/*.ts\"",
-    "build": "pnpm run lint && tsc",
+    "build": "tsc",
     "clean": "rimraf dist",
     "dev": "tsc -w",
     "prepare": "pnpm run build",

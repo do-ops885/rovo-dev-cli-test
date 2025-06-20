@@ -169,7 +169,7 @@ function setLogLevel(logger: Logger, level: string): void {
 /**
  * Show current log level
  */
-function showLogLevel(logger: Logger): void {
+function showLogLevel(_logger: Logger): void {
   // Since the current level is private in the Logger class,
   // we can't directly access it. We'll just show the available levels.
   console.log(chalk.blue('Available log levels:'));

@@ -45,15 +45,15 @@ export async function swarmCommand(task: string, options: SwarmOptions): Promise
       orchestrator.registerAgent(agent.name, agent);
     });
     
-    // Create task context
-    const taskContext: TaskContext = {
-      description: task,
-      priority: 4,
-      metadata: {
-        strategy,
-        swarm: true
-      }
-    };
+    // Create task context (used when not using orchestrator)
+    // const taskContext: TaskContext = {
+    //   description: task,
+    //   priority: 4,
+    //   metadata: {
+    //     strategy,
+    //     swarm: true
+    //   }
+    // };
     
     // Execute the task using orchestrator coordination
     console.log(chalk.blue('\nExecuting swarm task...'));
