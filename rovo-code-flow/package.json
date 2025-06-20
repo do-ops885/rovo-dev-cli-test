@@ -16,6 +16,7 @@
     "prepare": "pnpm run build",
     "start": "node dist/cli.js",
     "test": "vitest run",
+    "test:ci": "vitest run --coverage",
     "test:watch": "vitest",
     "release": "standard-version"
   },
@@ -43,6 +44,10 @@
     "@typescript-eslint/eslint-plugin": "^8.34.1",
     "@typescript-eslint/parser": "^8.34.1",
     "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "eslint-plugin-security": "^3.0.1",
+    "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
     "standard-version": "^9.5.0",
     "typescript": "^5.8.3",
