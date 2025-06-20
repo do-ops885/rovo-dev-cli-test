@@ -1,0 +1,5 @@
+.rovodev/mcp.json
+.env
+rovo-code-flow/dist/
+node_modules/
+rovo-code-flow/node_modules/

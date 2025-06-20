@@ -1,0 +1,51 @@
+{
+  "name": "rovo-code-flow",
+  "version": "0.1.0",
+  "description": "Multi‑agent orchestration CLI for Rovo Dev — combining SPARC & Event Modeling",
+  "author": "d.o.",
+  "license": "ISC",
+  "main": "dist/cli.js",
+  "bin": {
+    "rovo-code-flow": "./dist/cli.js"
+  },
+  "scripts": {
+    "lint": "eslint \"src/**/*.ts\"",
+    "build": "pnpm run lint && tsc",
+    "clean": "rimraf dist",
+    "dev": "tsc -w",
+    "prepare": "pnpm run build",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "release": "standard-version"
+  },
+  "keywords": [
+    "rovo",
+    "sparc",
+    "event-modeling",
+    "cli",
+    "ai",
+    "agent",
+    "orchestration"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=7"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0",
+    "inquirer": "^12.6.3"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.8",
+    "@types/node": "^24.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.34.1",
+    "@typescript-eslint/parser": "^8.34.1",
+    "eslint": "^9.29.0",
+    "rimraf": "^6.0.1",
+    "standard-version": "^9.5.0",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
