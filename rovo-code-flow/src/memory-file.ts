@@ -2,10 +2,10 @@
  * Memory file management for Rovo Dev
  */
 
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import chalk from 'chalk';
+import fs from "fs";
+import path from "path";
+import os from "os";
+import chalk from "chalk";
 
 export class MemoryFileManager {
   private globalMemoryPath: string;
@@ -13,9 +13,9 @@ export class MemoryFileManager {
   private repoMemoryPath: string;
 
   constructor() {
-    this.globalMemoryPath = path.join(os.homedir(), '.agent.md');
-    this.localMemoryPath = path.join(process.cwd(), '.agent.local.md');
-    this.repoMemoryPath = path.join(process.cwd(), '.agent.md');
+    this.globalMemoryPath = path.join(os.homedir(), ".agent.md");
+    this.localMemoryPath = path.join(process.cwd(), ".agent.local.md");
+    this.repoMemoryPath = path.join(process.cwd(), ".agent.md");
   }
 
   /**
@@ -26,45 +26,61 @@ export class MemoryFileManager {
       // Create global memory file if it doesn't exist
       if (!fs.existsSync(this.globalMemoryPath)) {
         fs.writeFileSync(this.globalMemoryPath, this.getDefaultGlobalMemory());
-        console.log(chalk.green(`Created global memory file at ${this.globalMemoryPath}`));
+        console.log(
+          chalk.green(`Created global memory file at ${this.globalMemoryPath}`),
+        );
       }
 
       // Create local memory file if it doesn't exist
       if (!fs.existsSync(this.localMemoryPath)) {
         fs.writeFileSync(this.localMemoryPath, this.getDefaultLocalMemory());
-        console.log(chalk.green(`Created local memory file at ${this.localMemoryPath}`));
+        console.log(
+          chalk.green(`Created local memory file at ${this.localMemoryPath}`),
+        );
       }
     } catch (error) {
-      console.error(chalk.red('Error initializing memory files:'), error);
+      console.error(chalk.red("Error initializing memory files:"), error);
     }
   }
 
   /**
    * Add a note to a memory file
    */
-  public async addNote(note: string, target: 'global' | 'local' | 'repo' = 'local'): Promise<boolean> {
+  public async addNote(
+    note: string,
+    target: "global" | "local" | "repo" = "local",
+  ): Promise<boolean> {
     try {
       const memoryPath = this.getMemoryPath(target);
-      
+
       if (!fs.existsSync(memoryPath)) {
-        if (target === 'repo') {
+        if (target === "repo") {
           // For repo memory, create it if it doesn't exist
-          fs.writeFileSync(memoryPath, `# ${path.basename(process.cwd())} Team Memory\n\n${note}\n`);
+          fs.writeFileSync(
+            memoryPath,
+            `# ${path.basename(process.cwd())} Team Memory\n\n${note}\n`,
+          );
         } else {
           // For other memory types, create with default content and add the note
-          const defaultContent = target === 'global' ? this.getDefaultGlobalMemory() : this.getDefaultLocalMemory();
+          const defaultContent =
+            target === "global"
+              ? this.getDefaultGlobalMemory()
+              : this.getDefaultLocalMemory();
           fs.writeFileSync(memoryPath, `${defaultContent}\n${note}\n`);
         }
       } else {
         // Append to existing file
-        const content = fs.readFileSync(memoryPath, 'utf8');
+        const content = fs.readFileSync(memoryPath, "utf8");
         fs.writeFileSync(memoryPath, `${content}\n${note}\n`);
       }
-      
+
       console.log(chalk.green(`Added note to ${target} memory file.`));
       return true;
     } catch (error) {
-      console.error(chalk.red(`Error adding note to ${target} memory file:`), error);
+      console.error(
+        chalk.red(`Error adding note to ${target} memory file:`),
+        error,
+      );
       return false;
     }
   }
@@ -72,29 +88,35 @@ export class MemoryFileManager {
   /**
    * Remove a note from a memory file
    */
-  public async removeNote(notePattern: string, target: 'global' | 'local' | 'repo' = 'local'): Promise<boolean> {
+  public async removeNote(
+    notePattern: string,
+    target: "global" | "local" | "repo" = "local",
+  ): Promise<boolean> {
     try {
       const memoryPath = this.getMemoryPath(target);
-      
+
       if (!fs.existsSync(memoryPath)) {
         console.log(chalk.yellow(`${target} memory file does not exist.`));
         return false;
       }
-      
-      const content = fs.readFileSync(memoryPath, 'utf8');
-      const regex = new RegExp(`.*${notePattern}.*\\n?`, 'g');
-      const newContent = content.replace(regex, '');
-      
+
+      const content = fs.readFileSync(memoryPath, "utf8");
+      const regex = new RegExp(`.*${notePattern}.*\\n?`, "g");
+      const newContent = content.replace(regex, "");
+
       if (content === newContent) {
         console.log(chalk.yellow(`Note not found in ${target} memory file.`));
         return false;
       }
-      
+
       fs.writeFileSync(memoryPath, newContent);
       console.log(chalk.green(`Removed note from ${target} memory file.`));
       return true;
     } catch (error) {
-      console.error(chalk.red(`Error removing note from ${target} memory file:`), error);
+      console.error(
+        chalk.red(`Error removing note from ${target} memory file:`),
+        error,
+      );
       return false;
     }
   }
@@ -104,31 +126,31 @@ export class MemoryFileManager {
    */
   public async initWithRepoInfo(): Promise<boolean> {
     try {
-      console.log(chalk.blue('Analyzing repository structure...'));
-      
+      console.log(chalk.blue("Analyzing repository structure..."));
+
       // Get directory structure
       const dirStructure = await this.getDirectoryStructure(process.cwd(), 2);
-      
+
       // Get package.json info if available
-      let packageInfo = '';
-      const packagePath = path.join(process.cwd(), 'package.json');
-      
+      let packageInfo = "";
+      const packagePath = path.join(process.cwd(), "package.json");
+
       if (fs.existsSync(packagePath)) {
         try {
-          const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+          const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
           packageInfo = `
 ## Project Information
 
-- **Name**: ${packageJson.name || 'Unknown'}
-- **Description**: ${packageJson.description || 'No description'}
-- **Version**: ${packageJson.version || 'Unknown'}
-- **Main technologies**: ${Object.keys(packageJson.dependencies || {}).join(', ')}
+- **Name**: ${packageJson.name || "Unknown"}
+- **Description**: ${packageJson.description || "No description"}
+- **Version**: ${packageJson.version || "Unknown"}
+- **Main technologies**: ${Object.keys(packageJson.dependencies || {}).join(", ")}
 `;
         } catch (_e) {
-          packageInfo = '';
+          packageInfo = "";
         }
       }
-      
+
       const memoryContent = `# Repository Memory
 
 This memory file contains information about the repository structure and coding standards.
@@ -153,12 +175,16 @@ ${packageInfo}
 - \`npm run build\`: Build the project
 - \`npm test\`: Run tests
 `;
-      
+
       fs.writeFileSync(this.localMemoryPath, memoryContent);
-      console.log(chalk.green(`Created repository memory file at ${this.localMemoryPath}`));
+      console.log(
+        chalk.green(
+          `Created repository memory file at ${this.localMemoryPath}`,
+        ),
+      );
       return true;
     } catch (error) {
-      console.error(chalk.red('Error initializing repository memory:'), error);
+      console.error(chalk.red("Error initializing repository memory:"), error);
       return false;
     }
   }
@@ -166,13 +192,13 @@ ${packageInfo}
   /**
    * Get memory file path based on target
    */
-  private getMemoryPath(target: 'global' | 'local' | 'repo'): string {
+  private getMemoryPath(target: "global" | "local" | "repo"): string {
     switch (target) {
-      case 'global':
+      case "global":
         return this.globalMemoryPath;
-      case 'local':
+      case "local":
         return this.localMemoryPath;
-      case 'repo':
+      case "repo":
         return this.repoMemoryPath;
     }
   }
@@ -224,36 +250,48 @@ This file contains your personal instructions specific to this repository when u
   /**
    * Get directory structure as a string
    */
-  private async getDirectoryStructure(dir: string, depth: number = 2, currentDepth: number = 0): Promise<string> {
+  private async getDirectoryStructure(
+    dir: string,
+    depth: number = 2,
+    currentDepth: number = 0,
+  ): Promise<string> {
     if (currentDepth > depth) {
-      return '';
+      return "";
     }
-    
+
     try {
       const items = fs.readdirSync(dir);
-      let result = '';
-      
+      let result = "";
+
       for (const item of items) {
         // Skip hidden files and node_modules
-        if (item.startsWith('.') || item === 'node_modules' || item === 'dist') {
+        if (
+          item.startsWith(".") ||
+          item === "node_modules" ||
+          item === "dist"
+        ) {
           continue;
         }
-        
+
         const itemPath = path.join(dir, item);
         const stats = fs.statSync(itemPath);
-        const indent = '  '.repeat(currentDepth);
-        
+        const indent = "  ".repeat(currentDepth);
+
         if (stats.isDirectory()) {
           result += `${indent}${item}/\n`;
-          result += await this.getDirectoryStructure(itemPath, depth, currentDepth + 1);
+          result += await this.getDirectoryStructure(
+            itemPath,
+            depth,
+            currentDepth + 1,
+          );
         } else {
           result += `${indent}${item}\n`;
         }
       }
-      
+
       return result;
     } catch (_error) {
-      return '';
+      return "";
     }
   }
 }

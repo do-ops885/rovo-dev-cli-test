@@ -2,12 +2,12 @@
  * Atlassian CLI (ACLI) integration for Rovo Dev
  */
 
-import { spawn } from 'child_process';
-import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { Config } from './config';
+import { spawn } from "child_process";
+import chalk from "chalk";
+import fs from "fs";
+import path from "path";
+import os from "os";
+import { Config } from "./config";
 
 export class AcliIntegration {
   private config: Config;
@@ -15,7 +15,7 @@ export class AcliIntegration {
 
   constructor() {
     this.config = new Config();
-    this.rovodevConfigPath = path.join(os.homedir(), '.rovodev');
+    this.rovodevConfigPath = path.join(os.homedir(), ".rovodev");
   }
 
   /**
@@ -23,13 +23,13 @@ export class AcliIntegration {
    */
   public async isAcliInstalled(): Promise<boolean> {
     return new Promise((resolve) => {
-      const acli = spawn('acli', ['--version']);
-      
-      acli.on('error', () => {
+      const acli = spawn("acli", ["--version"]);
+
+      acli.on("error", () => {
         resolve(false);
       });
-      
-      acli.on('close', (code) => {
+
+      acli.on("close", (code) => {
         resolve(code === 0);
       });
     });
@@ -43,39 +43,49 @@ export class AcliIntegration {
       if (!fs.existsSync(this.rovodevConfigPath)) {
         fs.mkdirSync(this.rovodevConfigPath, { recursive: true });
       }
-      
+
       // Create config.yml
-      const configPath = path.join(this.rovodevConfigPath, 'config.yml');
+      const configPath = path.join(this.rovodevConfigPath, "config.yml");
       if (!fs.existsSync(configPath)) {
         fs.writeFileSync(configPath, this.getDefaultConfig());
       }
-      
+
       // Create sessions directory
-      const sessionsPath = path.join(this.rovodevConfigPath, 'sessions');
+      const sessionsPath = path.join(this.rovodevConfigPath, "sessions");
       if (!fs.existsSync(sessionsPath)) {
         fs.mkdirSync(sessionsPath, { recursive: true });
       }
-      
+
       // Create instructions.yml
-      const instructionsPath = path.join(this.rovodevConfigPath, 'instructions.yml');
+      const instructionsPath = path.join(
+        this.rovodevConfigPath,
+        "instructions.yml",
+      );
       if (!fs.existsSync(instructionsPath)) {
         fs.writeFileSync(instructionsPath, this.getDefaultInstructions());
       }
-      
+
       // Create mcp.json
-      const mcpPath = path.join(this.rovodevConfigPath, 'mcp.json');
+      const mcpPath = path.join(this.rovodevConfigPath, "mcp.json");
       if (!fs.existsSync(mcpPath)) {
-        fs.writeFileSync(mcpPath, JSON.stringify({
-          "web-fetcher": {
-            "command": "npx",
-            "args": ["-y", "fetcher-mcp"]
-          }
-        }, null, 2));
+        fs.writeFileSync(
+          mcpPath,
+          JSON.stringify(
+            {
+              "web-fetcher": {
+                command: "npx",
+                args: ["-y", "fetcher-mcp"],
+              },
+            },
+            null,
+            2,
+          ),
+        );
       }
-      
+
       return true;
     } catch (error) {
-      console.error('Error initializing Rovo Dev:', error);
+      console.error("Error initializing Rovo Dev:", error);
       return false;
     }
   }
@@ -85,20 +95,20 @@ export class AcliIntegration {
    */
   public async authLogin(): Promise<boolean> {
     return new Promise((resolve) => {
-      console.log(chalk.blue('Authenticating with Atlassian account...'));
-      
-      const acli = spawn('acli', ['rovodev', 'auth', 'login'], {
-        stdio: 'inherit'
+      console.log(chalk.blue("Authenticating with Atlassian account..."));
+
+      const acli = spawn("acli", ["rovodev", "auth", "login"], {
+        stdio: "inherit",
       });
-      
-      acli.on('error', (error) => {
-        console.error(chalk.red('Authentication failed:'), error);
+
+      acli.on("error", (error) => {
+        console.error(chalk.red("Authentication failed:"), error);
         resolve(false);
       });
-      
-      acli.on('close', (code) => {
+
+      acli.on("close", (code) => {
         if (code === 0) {
-          console.log(chalk.green('Authentication successful!'));
+          console.log(chalk.green("Authentication successful!"));
           resolve(true);
         } else {
           console.error(chalk.red(`Authentication failed with code ${code}`));
@@ -113,20 +123,20 @@ export class AcliIntegration {
    */
   public async runInteractive(): Promise<boolean> {
     return new Promise((resolve) => {
-      console.log(chalk.blue('Starting Rovo Dev in interactive mode...'));
-      
-      const acli = spawn('acli', ['rovodev', 'run'], {
-        stdio: 'inherit'
+      console.log(chalk.blue("Starting Rovo Dev in interactive mode..."));
+
+      const acli = spawn("acli", ["rovodev", "run"], {
+        stdio: "inherit",
       });
-      
-      acli.on('error', (error) => {
-        console.error(chalk.red('Failed to start Rovo Dev:'), error);
+
+      acli.on("error", (error) => {
+        console.error(chalk.red("Failed to start Rovo Dev:"), error);
         resolve(false);
       });
-      
-      acli.on('close', (code) => {
+
+      acli.on("close", (code) => {
         if (code === 0) {
-          console.log(chalk.green('Rovo Dev session completed.'));
+          console.log(chalk.green("Rovo Dev session completed."));
           resolve(true);
         } else {
           console.error(chalk.red(`Rovo Dev exited with code ${code}`));
@@ -141,20 +151,22 @@ export class AcliIntegration {
    */
   public async runWithInstruction(instruction: string): Promise<boolean> {
     return new Promise((resolve) => {
-      console.log(chalk.blue(`Running Rovo Dev with instruction: "${instruction}"`));
-      
-      const acli = spawn('acli', ['rovodev', 'run', instruction], {
-        stdio: 'inherit'
+      console.log(
+        chalk.blue(`Running Rovo Dev with instruction: "${instruction}"`),
+      );
+
+      const acli = spawn("acli", ["rovodev", "run", instruction], {
+        stdio: "inherit",
       });
-      
-      acli.on('error', (error) => {
-        console.error(chalk.red('Failed to run Rovo Dev:'), error);
+
+      acli.on("error", (error) => {
+        console.error(chalk.red("Failed to run Rovo Dev:"), error);
         resolve(false);
       });
-      
-      acli.on('close', (code) => {
+
+      acli.on("close", (code) => {
         if (code === 0) {
-          console.log(chalk.green('Rovo Dev instruction completed.'));
+          console.log(chalk.green("Rovo Dev instruction completed."));
           resolve(true);
         } else {
           console.error(chalk.red(`Rovo Dev exited with code ${code}`));
