@@ -69,7 +69,8 @@ export class ToolPermissionsManager {
       }
 
       // Update tools section
-      config.tools = this.permissions;
+      const configObj = config as { tools?: Record<string, ToolPermission> };
+      configObj.tools = this.permissions;
 
       // Create directory if it doesn't exist
       const dir = path.dirname(this.configPath);

@@ -8,12 +8,15 @@ import type { TaskContext, TaskResult } from "../agent.interface";
 import { AcliIntegration } from "../../acli-integration";
 
 export class ModelerAgent extends BaseEventAgent {
+  private acli: AcliIntegration;
+
   constructor() {
     super("Modeler", [
       "event-modeling",
       "domain-analysis",
       "timeline-creation",
     ]);
+    this.acli = new AcliIntegration();
   }
 
   /**
@@ -249,7 +252,7 @@ Format your response as a JSON array of strings.`;
 
       try {
         // Use ACLI to make the API call
-        const result = await acli.runWithInstruction(prompt);
+        const result = await this.acli.runWithInstruction(prompt);
 
         // Parse the response (in a real scenario, this would parse the JSON response)
         // For now, we'll still use our mock events but log that the API call was made
@@ -376,7 +379,7 @@ Format your response as JSON with the following structure:
 
       try {
         // Make the API call
-        const result = await acli.runWithInstruction(prompt);
+        const result = await this.acli.runWithInstruction(prompt);
         log("Successfully called Rovo Dev API for timeline", "success");
 
         // In a production environment, we would parse the JSON response
@@ -438,7 +441,7 @@ Format your response as JSON with the following structure:
 
       try {
         // Make the API call
-        const result = await acli.runWithInstruction(prompt);
+        const result = await this.acli.runWithInstruction(prompt);
         log("Successfully called Rovo Dev API for state changes", "success");
 
         // In a production environment, we would parse the JSON response
@@ -536,7 +539,7 @@ Format your response as a well-structured Markdown document.`;
 
       try {
         // Make the API call
-        const result = await acli.runWithInstruction(prompt);
+        const result = await this.acli.runWithInstruction(prompt);
         log("Successfully called Rovo Dev API for event model", "success");
 
         // In a production environment, we would return the API response
@@ -597,7 +600,7 @@ Format your response as a well-structured Markdown document.`;
     // Add transitions
     events.forEach((event) => {
       if (timeline[event].triggers.length > 0) {
-        timeline[event].triggers.forEach((trigger) => {
+        timeline[event].triggers.forEach((trigger: string) => {
           model += `  ${event} --> ${trigger}\n`;
         });
       }

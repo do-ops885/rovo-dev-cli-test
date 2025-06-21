@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "build": "tsc",
+    "build": "npm run lint:fix && tsc",
     "clean": "rimraf dist",
     "dev": "tsc -w",
     "prepare": "pnpm run build",
@@ -37,7 +37,8 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
-    "inquirer": "^12.6.3"
+    "inquirer": "^12.6.3",
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.8",

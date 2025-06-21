@@ -224,10 +224,15 @@ export function getSessionDetails(sessionFile: string): any {
 
     return {
       id: path.basename(sessionFile, ".json"),
-      created: new Date(session.created || 0),
-      updated: new Date(session.updated || 0),
-      messages: session.messages?.length || 0,
-      title: session.title || "Untitled Session",
+      created: new Date(
+        typeof session.created !== "undefined" ? session.created : 0,
+      ),
+      updated: new Date(
+        typeof session.updated !== "undefined" ? session.updated : 0,
+      ),
+      messages: Array.isArray(session.messages) ? session.messages.length : 0,
+      title:
+        typeof session.title === "string" ? session.title : "Untitled Session",
     };
   } catch (error) {
     console.error("Error getting session details:", error);

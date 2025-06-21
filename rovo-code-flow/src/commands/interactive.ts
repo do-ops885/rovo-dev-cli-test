@@ -40,14 +40,11 @@ async function startInteractiveLoop(): Promise<void> {
   let running = true;
 
   while (running) {
-    const { input } = await inquirer.prompt([
-      {
-        type: "input",
-        name: "input",
-        message: "Rovo Dev>",
-        prefix: "🤖",
-      },
-    ]);
+    const { input } = await inquirer.prompt({
+      type: "input",
+      name: "input",
+      message: "Rovo Dev>",
+    });
 
     // Check for command prefix
     if (input.startsWith("/")) {
