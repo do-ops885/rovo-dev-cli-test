@@ -9,6 +9,7 @@ Multi-agent orchestration CLI for Rovo Dev, blending SPARC and Event Modeling me
 - **Natural Language Commands**: Drive code, documentation, and project management with plain English
 - **Memory and Knowledge Bank**: Store and retrieve project knowledge
 - **Enterprise Features**: Project/deployment management, analytics, compliance
+- **Concurrency Control**: Prevent concurrent file edits by multiple agents with distributed locking
 
 ## Installation
 
@@ -246,3 +247,38 @@ npm test
 ## License
 
 ISC
+
+## File Locking System
+
+To prevent concurrent file edits by multiple agents, Rovo Code Flow implements a distributed locking mechanism:
+
+- **Dual-layer Locking**: Uses both memory and filesystem for redundancy
+- **Agent-specific Locks**: Each lock is associated with the agent that acquired it
+- **Automatic Cleanup**: Expired locks are automatically cleaned up
+- **Conflict Resolution**: Uses exponential backoff for retry attempts
+
+Agents automatically acquire locks before writing to files and release them afterward, ensuring data integrity in multi-agent scenarios.
+
+### Usage in Agent Implementation
+
+```typescript
+// Example of using file locking in an agent
+async function writeToFile(filePath: string, content: string) {
+  // Acquire lock before writing
+  const lockAcquired = await this.acquireFileLock(filePath);
+  
+  if (!lockAcquired) {
+    console.log(`Failed to acquire lock for ${filePath}`);
+    return false;
+  }
+  
+  try {
+    // Write to file
+    fs.writeFileSync(filePath, content);
+    return true;
+  } finally {
+    // Always release lock when done
+    await this.releaseFileLock(filePath);
+  }
+}
+```

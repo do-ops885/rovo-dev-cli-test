@@ -8,6 +8,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { spawn } from "child_process";
+import { FilePathValidationError } from "./errors";
 
 /**
  * Log a message with a timestamp
@@ -51,7 +52,11 @@ export function isValidJson(str: string): boolean {
   try {
     JSON.parse(str);
     return true;
-  } catch (_e) {
+  } catch (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _error
+  ) {
+    // Error is intentionally ignored
     return false;
   }
 }
@@ -80,7 +85,10 @@ export function formatDuration(ms: number): string {
 /**
  * Debounce a function
  */
-export function debounce(func: Function, wait: number): Function {
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout>;
 
   return function executedFunction(...args: any[]) {
@@ -238,4 +246,51 @@ export function getSessionDetails(sessionFile: string): any {
     console.error("Error getting session details:", error);
     return null;
   }
+}
+
+/**
+ * Validate a file path to prevent path traversal attacks
+ * @param filePath The file path to validate
+ * @param allowedBasePaths Optional array of allowed base paths
+ * @returns The normalized absolute path if valid
+ * @throws FilePathValidationError if path is invalid
+ */
+export function validateFilePath(
+  filePath: string,
+  allowedBasePaths?: string[],
+): string {
+  if (!filePath) {
+    throw new FilePathValidationError("File path cannot be empty");
+  }
+
+  // Check for null bytes which can be used in path traversal attacks
+  if (filePath.includes("\0")) {
+    throw new FilePathValidationError("File path contains null bytes", {
+      path: filePath,
+    });
+  }
+
+  // Normalize the path to resolve any '..' or '.' segments
+  const normalizedPath = path.normalize(filePath);
+
+  // If allowed base paths are specified, ensure the path is within one of them
+  if (allowedBasePaths && allowedBasePaths.length > 0) {
+    const absolutePath = path.resolve(normalizedPath);
+    const isWithinAllowedPath = allowedBasePaths.some((basePath) => {
+      const normalizedBasePath = path.normalize(basePath);
+      const absoluteBasePath = path.resolve(normalizedBasePath);
+      return absolutePath.startsWith(absoluteBasePath);
+    });
+
+    if (!isWithinAllowedPath) {
+      throw new FilePathValidationError(
+        "File path is outside allowed directories",
+        {
+          path: filePath,
+        },
+      );
+    }
+  }
+
+  return normalizedPath;
 }

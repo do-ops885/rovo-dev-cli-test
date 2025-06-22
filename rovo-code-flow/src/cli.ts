@@ -18,7 +18,20 @@ import { interactiveCommand } from "./commands/interactive";
 import { mcpCommand } from "./commands/mcp";
 import chalk from "chalk";
 
+// Define color themes for command categories
+const colors = {
+  core: chalk.green,
+  agent: chalk.blue,
+  system: chalk.yellow,
+  tools: chalk.magenta,
+  utility: chalk.cyan,
+};
+
 // Create CLI program
+// Check for --no-color flag
+if (process.argv.includes("--no-color")) {
+  chalk.level = 0;
+}
 const program = new Command();
 
 // Set version and description
@@ -27,36 +40,41 @@ program
   .description(
     "Multi-agent orchestration CLI for Rovo Dev, blending SPARC and Event Modeling",
   )
-  .version("1.0.0");
+  .version("1.0.0")
+  .option("--no-color", "Disable colored output (for accessibility)");
 
-// Initialize command
+// Initialize command (Core)
 program
   .command("init")
   .description(
-    "Initialize rovo-code-flow with SPARC and/or Event Modeling modes",
+    colors.core(
+      `Initialize rovo-code-flow with SPARC and/or Event Modeling modes`,
+    ),
   )
   .option("--sparc", "Initialize SPARC modes")
   .option("--event", "Initialize Event Modeling modes")
   .action(initCommand);
 
-// Start command
+// Start command (Core)
 program
   .command("start")
-  .description("Start the orchestrator")
+  .description(colors.core("Start the orchestrator"))
   .option("--ui", "Start with UI")
   .option("--port <number>", "UI port", "3000")
-  .action(startCommand);
+  .action(async (options) => {
+    await startCommand(options);
+  });
 
-// Status command
+// Status command (System)
 program
   .command("status")
-  .description("Show system health and metrics")
+  .description(colors.system("Show system health and metrics"))
   .action(statusCommand);
 
-// SPARC command
+// SPARC command (Agent)
 program
   .command("sparc")
-  .description("Run SPARC agent")
+  .description(colors.agent("Run SPARC agent"))
   .argument(
     "<mode>",
     "SPARC mode (architect, coder, tdd, security, devops, etc.)",
@@ -64,26 +82,26 @@ program
   .argument("[description]", "Task description")
   .action(sparcCommand);
 
-// Event command
+// Event command (Agent)
 program
   .command("event")
-  .description("Run Event Modeling agent")
+  .description(colors.agent("Run Event Modeling agent"))
   .argument("<role>", "Event Modeling role (modeler, timeline, ui, etc.)")
   .argument("[description]", "Task description")
   .action(eventCommand);
 
-// Agent command
+// Agent command (Agent)
 program
   .command("agent")
-  .description("Agent management")
+  .description(colors.agent("Agent management"))
   .argument("<action>", "Action to perform (spawn, list, kill)")
   .argument("[name]", "Agent name")
   .action(agentCommand);
 
-// Memory command
+// Memory command (System)
 program
   .command("memory")
-  .description("Memory file operations")
+  .description(colors.system("Memory file operations"))
   .argument(
     "<action>",
     "Action to perform (init, add/store, remove/delete, show/list)",
@@ -94,20 +112,20 @@ program
   .option("--repo", "Use repository memory file (./.agent.md)")
   .action(memoryCommand);
 
-// Swarm command
+// Swarm command (Agent)
 program
   .command("swarm")
-  .description("Multi-agent coordination")
+  .description(colors.agent("Multi-agent coordination"))
   .argument("<task>", "Task description")
   .option("--parallel", "Run agents in parallel")
   .option("--strategy <strategy>", "Coordination strategy", "development")
   .option("--max-agents <number>", "Maximum number of agents", "3")
   .action(swarmCommand);
 
-// ACLI integration command
+// ACLI integration command (Tools)
 program
   .command("acli")
-  .description("Atlassian CLI (ACLI) integration for Rovo Dev")
+  .description(colors.tools("Atlassian CLI (ACLI) integration for Rovo Dev"))
   .argument("<action>", "Action to perform (install, auth, run, setup)")
   .option("--interactive", "Run in interactive mode")
   .option(
@@ -116,63 +134,79 @@ program
   )
   .action(acliCommand);
 
-// Usage command
+// Usage command (Utility)
 program
   .command("usage")
-  .description("Show daily token usage")
+  .description(colors.utility("Show daily token usage"))
   .action(usageCommand);
 
-// Sessions command
+// Sessions command (Utility)
 program
   .command("sessions")
-  .description("Session management")
+  .description(colors.utility("Session management"))
   .option("--clear", "Clear the current session")
   .option("--prune", "Prune the current session to reduce token usage")
   .option("--switch <id>", "Switch to a different session")
   .option("--list", "List all sessions")
   .action(sessionsCommand);
 
-// Instructions command
+// Instructions command (Utility)
 program
   .command("instructions")
-  .description("Instructions management")
+  .description(colors.utility("Instructions management"))
   .option("--list", "List all instructions")
   .option("--add", "Add a new instruction")
-  .option("--remove <name>", "Remove an instruction")
-  .option("--run <name>", "Run an instruction")
+  .option("--remove <n>", "Remove an instruction")
+  .option("--run <n>", "Run an instruction")
   .action(instructionsCommand);
 
-// Feedback command
+// Feedback command (Utility)
 program
   .command("feedback")
-  .description("Provide feedback or report a bug")
+  .description(colors.utility("Provide feedback or report a bug"))
   .option("--bug", "Report a bug")
   .option("--feature", "Request a feature")
   .action(feedbackCommand);
 
-// Interactive command
+// Interactive command (Core)
 program
   .command("interactive")
   .alias("i")
-  .description("Start interactive mode")
+  .description(colors.core("Start interactive mode"))
   .option("--prompt <prompt>", "Initial prompt")
   .action(interactiveCommand);
 
-// MCP command
+// MCP command (System)
 program
   .command("mcp")
-  .description("Model Context Protocol server management")
+  .description(colors.system("Model Context Protocol server management"))
   .argument("<action>", "Action to perform (start, stop, list, add, remove)")
-  .option("--start <name>", "Start an MCP server")
-  .option("--stop <name>", "Stop an MCP server")
+  .option("--start <n>", "Start an MCP server")
+  .option("--stop <n>", "Stop an MCP server")
   .option("--list", "List all MCP servers")
   .option("--add", "Add a new MCP server")
-  .option("--remove <name>", "Remove an MCP server")
+  .option("--remove <n>", "Remove an MCP server")
   .action(mcpCommand);
 
-// Display header
+// Display header with version
 console.log(
-  chalk.blue.bold("\n🤖 Rovo Code Flow - Multi-agent orchestration CLI\n"),
+  chalk.blue.bold("\nðŸ¤– Rovo Code Flow - Multi-agent orchestration CLI"),
+  chalk.gray("v1.0.0"),
+  "\n",
+);
+
+// Display command categories
+console.log(
+  colors.core("Core Commands:") +
+    " init, start, interactive\n" +
+    colors.agent("Agent Commands:") +
+    " sparc, event, agent, swarm\n" +
+    colors.system("System Commands:") +
+    " status, memory, mcp\n" +
+    colors.tools("Tool Commands:") +
+    " acli\n" +
+    colors.utility("Utility Commands:") +
+    " usage, sessions, instructions, feedback\n",
 );
 
 // Parse arguments

@@ -6,6 +6,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import chalk from "chalk";
+import { validateFilePath } from "./utils";
 
 export class MemoryFileManager {
   private globalMemoryPath: string;
@@ -146,7 +147,11 @@ export class MemoryFileManager {
 - **Version**: ${packageJson.version || "Unknown"}
 - **Main technologies**: ${Object.keys(packageJson.dependencies || {}).join(", ")}
 `;
-        } catch (_e) {
+        } catch (
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          _error
+        ) {
+          // Error is intentionally ignored
           packageInfo = "";
         }
       }
@@ -193,14 +198,24 @@ ${packageInfo}
    * Get memory file path based on target
    */
   private getMemoryPath(target: "global" | "local" | "repo"): string {
+    let memoryPath: string;
+
     switch (target) {
       case "global":
-        return this.globalMemoryPath;
+        memoryPath = this.globalMemoryPath;
+        break;
       case "local":
-        return this.localMemoryPath;
+        memoryPath = this.localMemoryPath;
+        break;
       case "repo":
-        return this.repoMemoryPath;
+        memoryPath = this.repoMemoryPath;
+        break;
     }
+
+    // Validate the path to prevent path traversal attacks
+    const allowedBasePaths = [os.homedir(), process.cwd()];
+
+    return validateFilePath(memoryPath, allowedBasePaths);
   }
 
   /**
@@ -290,7 +305,11 @@ This file contains your personal instructions specific to this repository when u
       }
 
       return result;
-    } catch (_error) {
+    } catch (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _error
+    ) {
+      // Error is intentionally ignored
       return "";
     }
   }

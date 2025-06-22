@@ -6,6 +6,8 @@ import { BaseEventAgent } from "./base-event-agent";
 import { log } from "../../utils";
 import type { TaskContext, TaskResult } from "../agent.interface";
 import { AcliIntegration } from "../../acli-integration";
+import fs from "fs";
+import path from "path";
 
 export class ModelerAgent extends BaseEventAgent {
   private acli: AcliIntegration;
@@ -198,8 +200,7 @@ export class ModelerAgent extends BaseEventAgent {
     fileName: string,
   ): Promise<void> {
     try {
-      const fs = require("fs");
-      const path = require("path");
+      // fs and path are now imported at the top of the file
 
       // Create output directory if it doesn't exist
       if (!fs.existsSync(outputDir)) {
@@ -208,9 +209,33 @@ export class ModelerAgent extends BaseEventAgent {
 
       // Write model to file
       const filePath = path.join(outputDir, fileName);
-      fs.writeFileSync(filePath, model);
 
-      log(`Model saved to ${filePath}`, "success");
+      // Acquire lock before writing to file
+      let lockAcquired = false;
+      if (this.fileLockManager) {
+        log(`Acquiring lock for file: ${filePath}`, "info");
+        lockAcquired = await this.acquireFileLock(filePath);
+
+        if (!lockAcquired) {
+          log(
+            `Failed to acquire lock for file: ${filePath}, cannot save model`,
+            "error",
+          );
+          throw new Error(`Failed to acquire lock for file: ${filePath}`);
+        }
+      }
+
+      try {
+        // Write file
+        fs.writeFileSync(filePath, model);
+        log(`Model saved to ${filePath}`, "success");
+      } finally {
+        // Release lock if it was acquired
+        if (lockAcquired && this.fileLockManager) {
+          await this.releaseFileLock(filePath);
+          log(`Released lock for file: ${filePath}`, "info");
+        }
+      }
     } catch (error) {
       log(`Error saving model to file: ${error}`, "error");
       throw error;
@@ -225,9 +250,6 @@ export class ModelerAgent extends BaseEventAgent {
     domainContext: Record<string, any> = {},
   ): Promise<string[]> {
     try {
-      // Use ACLI integration to get events
-      const acli = new AcliIntegration();
-
       // Create a structured prompt for event identification
       let prompt = `Analyze the following task description and identify domain events:
       
@@ -250,94 +272,38 @@ Format your response as a JSON array of strings.`;
       // Call Rovo Dev's API for event identification
       log("Calling Rovo Dev API for event identification...", "info");
 
+      const response = await this.acli.runWithInstruction(prompt);
+      log("Successfully received event identification response", "success");
+
+      // Parse the JSON response
       try {
-        // Use ACLI to make the API call
-        const result = await this.acli.runWithInstruction(prompt);
-
-        // Parse the response (in a real scenario, this would parse the JSON response)
-        // For now, we'll still use our mock events but log that the API call was made
-        log("Successfully called Rovo Dev API", "success");
-
-        // In a production environment, we would parse the JSON response:
-        // try {
-        //   const jsonResponse = JSON.parse(result);
-        //   if (Array.isArray(jsonResponse)) {
-        //     return jsonResponse;
-        //   }
-        // } catch (parseError) {
-        //   log(`Error parsing API response: ${parseError}`, 'error');
-        // }
-      } catch (apiError) {
-        log(`API call failed: ${apiError}`, "error");
-        // Continue with mock events as fallback
+        // Extract JSON array from the response
+        const jsonMatch = response.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          const jsonResponse = JSON.parse(jsonMatch[0]);
+          if (Array.isArray(jsonResponse)) {
+            log(
+              `Successfully identified ${jsonResponse.length} events`,
+              "success",
+            );
+            return jsonResponse;
+          }
+        }
+        throw new Error("Could not find valid JSON array in response");
+      } catch (parseError) {
+        log(
+          `Error parsing event identification response: ${parseError}`,
+          "error",
+        );
+        throw new Error(
+          `Failed to parse event identification response: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        );
       }
-
-      // For demonstration, we'll create some mock events based on the description
-      let mockEvents = [
-        "UserRegistered",
-        "EmailVerificationSent",
-        "EmailVerified",
-        "PasswordChanged",
-        "UserLoggedIn",
-      ];
-
-      // Customize events based on description
-      if (description.toLowerCase().includes("password reset")) {
-        mockEvents = [
-          "PasswordResetRequested",
-          "PasswordResetEmailSent",
-          "PasswordResetLinkClicked",
-          "PasswordChanged",
-          "UserNotified",
-        ];
-      } else if (
-        description.toLowerCase().includes("order") ||
-        description.toLowerCase().includes("purchase")
-      ) {
-        mockEvents = [
-          "CartCreated",
-          "ProductAdded",
-          "CheckoutStarted",
-          "PaymentProcessed",
-          "OrderConfirmed",
-          "ShipmentCreated",
-        ];
-      } else if (
-        description.toLowerCase().includes("authentication") ||
-        description.toLowerCase().includes("login")
-      ) {
-        mockEvents = [
-          "LoginAttempted",
-          "UserAuthenticated",
-          "SessionCreated",
-          "LoginFailed",
-          "AccountLocked",
-        ];
-      }
-
-      // Customize events based on domain context
-      if (domainContext.entities && domainContext.entities.length > 0) {
-        // Add entity-specific events
-        const entityEvents = domainContext.entities
-          .map((entity: string) => {
-            const capitalizedEntity =
-              entity.charAt(0).toUpperCase() + entity.slice(1);
-            return [
-              `${capitalizedEntity}Created`,
-              `${capitalizedEntity}Updated`,
-              `${capitalizedEntity}Deleted`,
-            ];
-          })
-          .flat();
-
-        // Add some of these events to our mock events
-        mockEvents = [...mockEvents, ...entityEvents.slice(0, 3)];
-      }
-
-      return mockEvents;
     } catch (error) {
       log(`Error identifying events: ${error}`, "error");
-      return ["Event1", "Event2", "Event3"]; // Fallback mock events
+      throw new Error(
+        `Failed to identify events: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -348,9 +314,6 @@ Format your response as a JSON array of strings.`;
     events: string[],
   ): Promise<Record<string, any>> {
     try {
-      // Use ACLI integration to create timeline
-      const acli = new AcliIntegration();
-
       // Create a structured prompt for timeline creation
       const prompt = `Create an event timeline for the following events:
       
@@ -377,33 +340,34 @@ Format your response as JSON with the following structure:
 
       log("Calling Rovo Dev API for timeline creation...", "info");
 
-      try {
-        // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
-        log("Successfully called Rovo Dev API for timeline", "success");
+      const response = await this.acli.runWithInstruction(prompt);
+      log("Successfully received timeline creation response", "success");
 
-        // In a production environment, we would parse the JSON response
-        // For now, we'll continue with our mock implementation
-      } catch (apiError) {
-        log(`API call failed: ${apiError}`, "error");
-        // Continue with mock timeline as fallback
+      // Parse the JSON response
+      try {
+        // Extract JSON object from the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const jsonResponse = JSON.parse(jsonMatch[0]);
+          log(
+            `Successfully created timeline with ${Object.keys(jsonResponse).length} events`,
+            "success",
+          );
+          return jsonResponse;
+        }
+        throw new Error("Could not find valid JSON object in response");
+      } catch (parseError) {
+        log(`Error parsing timeline response: ${parseError}`, "error");
+        throw new Error(
+          `Failed to parse timeline response: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        );
       }
     } catch (error) {
       log(`Error creating timeline: ${error}`, "error");
+      throw new Error(
+        `Failed to create event timeline: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-
-    // Create a mock timeline as fallback
-    const timeline: Record<string, any> = {};
-
-    events.forEach((event, index) => {
-      timeline[event] = {
-        order: index + 1,
-        dependencies: index > 0 ? [events[index - 1]] : [],
-        triggers: index < events.length - 1 ? [events[index + 1]] : [],
-      };
-    });
-
-    return timeline;
   }
 
   /**
@@ -413,9 +377,6 @@ Format your response as JSON with the following structure:
     events: string[],
   ): Promise<Record<string, any>> {
     try {
-      // Use ACLI integration to map state changes
-      const acli = new AcliIntegration();
-
       // Create a structured prompt for state change mapping
       const prompt = `Map state changes for the following events:
       
@@ -439,67 +400,37 @@ Format your response as JSON with the following structure:
 
       log("Calling Rovo Dev API for state change mapping...", "info");
 
-      try {
-        // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
-        log("Successfully called Rovo Dev API for state changes", "success");
+      const response = await this.acli.runWithInstruction(prompt);
+      log("Successfully received state change mapping response", "success");
 
-        // In a production environment, we would parse the JSON response
-        // For now, we'll continue with our mock implementation
-      } catch (apiError) {
-        log(`API call failed: ${apiError}`, "error");
-        // Continue with mock state changes as fallback
+      // Parse the JSON response
+      try {
+        // Extract JSON object from the response
+        const jsonMatch = response.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const jsonResponse = JSON.parse(jsonMatch[0]);
+          log(
+            `Successfully mapped state changes for ${Object.keys(jsonResponse).length} events`,
+            "success",
+          );
+          return jsonResponse;
+        }
+        throw new Error("Could not find valid JSON object in response");
+      } catch (parseError) {
+        log(
+          `Error parsing state change mapping response: ${parseError}`,
+          "error",
+        );
+        throw new Error(
+          `Failed to parse state change mapping response: ${parseError instanceof Error ? parseError.message : String(parseError)}`,
+        );
       }
     } catch (error) {
       log(`Error mapping state changes: ${error}`, "error");
+      throw new Error(
+        `Failed to map state changes: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-
-    // Create mock state changes as fallback
-    const stateChanges: Record<string, any> = {};
-
-    events.forEach((event) => {
-      switch (event) {
-        case "UserRegistered":
-          stateChanges[event] = {
-            before: { user: null },
-            after: { user: { status: "unverified" } },
-          };
-          break;
-        case "EmailVerificationSent":
-          stateChanges[event] = {
-            before: { verificationEmail: null },
-            after: { verificationEmail: { status: "sent" } },
-          };
-          break;
-        case "EmailVerified":
-          stateChanges[event] = {
-            before: { user: { status: "unverified" } },
-            after: { user: { status: "active" } },
-          };
-          break;
-        case "PasswordResetRequested":
-          stateChanges[event] = {
-            before: { passwordReset: null },
-            after: {
-              passwordReset: { status: "requested", token: "generated" },
-            },
-          };
-          break;
-        case "OrderConfirmed":
-          stateChanges[event] = {
-            before: { order: { status: "pending" } },
-            after: { order: { status: "confirmed" } },
-          };
-          break;
-        default:
-          stateChanges[event] = {
-            before: { state: "previous" },
-            after: { state: "next" },
-          };
-      }
-    });
-
-    return stateChanges;
   }
 
   /**
@@ -511,9 +442,6 @@ Format your response as JSON with the following structure:
     stateChanges: Record<string, any>,
   ): Promise<string> {
     try {
-      // Use ACLI integration to generate the event model
-      const acli = new AcliIntegration();
-
       // Create a structured prompt for event model generation
       const prompt = `Generate a comprehensive event model based on the following information:
 
@@ -537,87 +465,23 @@ Format your response as a well-structured Markdown document.`;
 
       log("Calling Rovo Dev API for event model generation...", "info");
 
-      try {
-        // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
-        log("Successfully called Rovo Dev API for event model", "success");
+      const response = await this.acli.runWithInstruction(prompt);
+      log("Successfully received event model generation response", "success");
 
-        // In a production environment, we would return the API response
-        // For now, we'll continue with our mock implementation
-      } catch (apiError) {
-        log(`API call failed: ${apiError}`, "error");
-        // Continue with mock model as fallback
+      // Check if the response contains Markdown content
+      if (response.includes("# ") || response.includes("## ")) {
+        // Extract the Markdown content
+        const markdownContent = response.trim();
+        log("Successfully generated event model", "success");
+        return markdownContent;
+      } else {
+        throw new Error("Response does not contain valid Markdown content");
       }
     } catch (error) {
       log(`Error generating event model: ${error}`, "error");
+      throw new Error(
+        `Failed to generate event model: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-
-    // Generate a more comprehensive model as fallback
-    let model = "# Event Model\n\n";
-
-    // Add overview section
-    model += "## Overview\n\n";
-    model += `This event model contains ${events.length} events that describe a workflow. `;
-    model +=
-      "The events are organized in a timeline with dependencies and triggers, ";
-    model += "and each event causes specific state changes in the system.\n\n";
-
-    // Add events section
-    model += "## Events\n\n";
-
-    events.forEach((event) => {
-      model += `### ${event}\n`;
-      model += `- **Order**: ${timeline[event].order}\n`;
-      model += `- **Dependencies**: ${timeline[event].dependencies.length > 0 ? timeline[event].dependencies.join(", ") : "None"}\n`;
-      model += `- **Triggers**: ${timeline[event].triggers.length > 0 ? timeline[event].triggers.join(", ") : "None"}\n`;
-      model += "- **State Changes**:\n";
-      model += "  - Before:\n";
-
-      // Format the before state nicely
-      Object.entries(stateChanges[event].before).forEach(([key, value]) => {
-        model += `    - ${key}: ${JSON.stringify(value)}\n`;
-      });
-
-      model += "  - After:\n";
-
-      // Format the after state nicely
-      Object.entries(stateChanges[event].after).forEach(([key, value]) => {
-        model += `    - ${key}: ${JSON.stringify(value)}\n`;
-      });
-
-      model += "\n";
-    });
-
-    // Add event flow section
-    model += "## Event Flow\n\n";
-    model += "```mermaid\nstateDiagram-v2\n";
-
-    // Add states
-    events.forEach((event) => {
-      model += `  ${event}\n`;
-    });
-
-    // Add transitions
-    events.forEach((event) => {
-      if (timeline[event].triggers.length > 0) {
-        timeline[event].triggers.forEach((trigger: string) => {
-          model += `  ${event} --> ${trigger}\n`;
-        });
-      }
-    });
-
-    model += "```\n\n";
-
-    // Add implementation recommendations
-    model += "## Implementation Recommendations\n\n";
-    model +=
-      "1. Implement an event-driven architecture to handle these events\n";
-    model +=
-      "2. Use event sourcing to maintain state based on the event history\n";
-    model += "3. Consider using a message queue for event distribution\n";
-    model += "4. Implement proper error handling and retry mechanisms\n";
-    model += "5. Add validation to ensure state transitions are valid\n";
-
-    return model;
   }
 }

@@ -21,6 +21,9 @@ vi.mock('../src/memory-file', () => ({
 
 // Mock inquirer
 vi.mock('inquirer', () => ({
+  default: {
+    prompt: vi.fn()
+  },
   prompt: vi.fn()
 }));
 

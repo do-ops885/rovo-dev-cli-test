@@ -2,16 +2,25 @@
  * Base class for Event Modeling agents
  */
 
-import type { Agent, TaskContext, TaskResult } from "../agent.interface";
+import type {
+  Agent,
+  AgentStatus,
+  AgentType,
+  TaskContext,
+  TaskResult,
+} from "../agent.interface";
 import { generateId, log } from "../../utils";
+import { FileLockManager } from "../../file-lock-manager";
+import { Memory } from "../../memory";
 
 export abstract class BaseEventAgent implements Agent {
   public id: string;
   public name: string;
-  public type: string = "Event";
-  public status: "idle" | "busy" | "error" | "paused" = "idle";
+  public type: AgentType = "Event";
+  public status: AgentStatus = "idle";
   public capabilities: string[] = [];
   public config: Record<string, any> = {};
+  protected fileLockManager: FileLockManager | null = null;
 
   // Metrics tracking
   protected taskHistory: {
@@ -37,6 +46,14 @@ export abstract class BaseEventAgent implements Agent {
 
     // Load agent-specific resources
     await this.loadResources();
+
+    // Initialize file lock manager if needed
+    if (this.config.useFileLocks) {
+      // Import Memory directly to avoid path issues in tests
+      const memory = new Memory();
+      this.fileLockManager = new FileLockManager(memory);
+      log(`File lock manager initialized for ${this.name} agent`, "info");
+    }
 
     log(`${this.name} agent initialized`, "success");
   }
@@ -226,7 +243,8 @@ export abstract class BaseEventAgent implements Agent {
   ): Promise<TaskResult> {
     log(`${this.name} collaborating with ${agent.name} on task...`, "info");
 
-    const taskDescription = typeof task === "string" ? task : task.description;
+    // Unused variable commented out
+    // const taskDescription = typeof task === "string" ? task : task.description;
 
     // First, this agent processes the task
     const myResult = await this.executeTask(task);
@@ -294,5 +312,37 @@ export abstract class BaseEventAgent implements Agent {
       log(`${stepName}...`, "info");
     }
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Acquire a lock on a file
+   * @param filePath Path to the file to lock
+   * @param timeoutMs Optional timeout in milliseconds
+   * @returns Promise resolving to true if lock was acquired, false otherwise
+   */
+  public async acquireFileLock(
+    filePath: string,
+    timeoutMs?: number,
+  ): Promise<boolean> {
+    if (!this.fileLockManager) {
+      log(`File lock manager not initialized for ${this.name} agent`, "warn");
+      return false;
+    }
+
+    return this.fileLockManager.acquireLock(filePath, this.id, timeoutMs);
+  }
+
+  /**
+   * Release a lock on a file
+   * @param filePath Path to the file to unlock
+   * @returns Promise resolving to true if lock was released, false otherwise
+   */
+  public async releaseFileLock(filePath: string): Promise<boolean> {
+    if (!this.fileLockManager) {
+      log(`File lock manager not initialized for ${this.name} agent`, "warn");
+      return false;
+    }
+
+    return this.fileLockManager.releaseLock(filePath, this.id);
   }
 }

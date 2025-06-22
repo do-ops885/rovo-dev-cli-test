@@ -34,7 +34,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
   await acli.initRovoDev();
 
   if (options.sparc) {
-    console.log(chalk.blue("Initializing SPARC modes..."));
+    console.log("Initializing SPARC modes...");
 
     // Update configuration
     config.set("sparc.enabled", true);
@@ -88,7 +88,7 @@ rovo-code-flow sparc coder "implement user login"
   }
 
   if (options.event) {
-    console.log(chalk.magenta("Initializing Event Modeling modes..."));
+    console.log("Initializing Event Modeling modes...");
 
     // Update configuration
     config.set("event.enabled", true);

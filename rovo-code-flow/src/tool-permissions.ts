@@ -7,6 +7,7 @@ import path from "path";
 import os from "os";
 import chalk from "chalk";
 import inquirer from "inquirer";
+import yaml from "yaml";
 
 export interface ToolPermission {
   allow: boolean;
@@ -28,7 +29,7 @@ export class ToolPermissionsManager {
   private loadPermissions(): void {
     try {
       if (fs.existsSync(this.configPath)) {
-        const yaml = require("yaml");
+        // yaml is now imported at the top of the file
         const content = fs.readFileSync(this.configPath, "utf8");
         const config = yaml.parse(content);
 
@@ -59,7 +60,7 @@ export class ToolPermissionsManager {
    */
   private savePermissions(): void {
     try {
-      const yaml = require("yaml");
+      // yaml is now imported at the top of the file
 
       // Read existing config
       let config = {};

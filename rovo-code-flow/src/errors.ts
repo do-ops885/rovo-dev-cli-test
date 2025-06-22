@@ -159,3 +159,28 @@ export class DocumentationError extends RovoError {
     });
   }
 }
+
+/**
+ * Error thrown when file path validation fails
+ * @class FilePathValidationError
+ * @extends RovoError
+ */
+export class FilePathValidationError extends RovoError {
+  constructor(
+    message: string,
+    options?: {
+      cause?: Error;
+      context?: Record<string, any>;
+      path?: string;
+    },
+  ) {
+    super(message, {
+      ...options,
+      code: "FILE_PATH_VALIDATION_ERROR",
+      context: {
+        ...options?.context,
+        path: options?.path,
+      },
+    });
+  }
+}

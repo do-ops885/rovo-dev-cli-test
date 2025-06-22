@@ -148,7 +148,8 @@ Format your response as JSON with the following structure:
 
       try {
         // Use ACLI to make the API call
-        const result = await this.acli.runWithInstruction(prompt);
+        // Using void to acknowledge we are ignoring the result
+        void (await this.acli.runWithInstruction(prompt));
 
         // Parse the response (in a real scenario, this would parse the JSON response)
         // For now, we'll still use our mock requirements but log that the API call was made
@@ -205,7 +206,8 @@ Format your response as JSON with the following structure:
   ): Promise<Record<string, any>> {
     try {
       // Use ACLI integration to get requirements
-      const acli = new AcliIntegration();
+      // Unused variable commented out
+      // const acli = new AcliIntegration();
 
       // Create a structured prompt for requirements analysis
       const prompt = `Analyze the following task description and extract key requirements:
@@ -231,7 +233,8 @@ Format your response as JSON with the following structure:
 
       try {
         // Use ACLI to make the API call
-        const result = await this.acli.runWithInstruction(prompt);
+        // Using void to acknowledge we are ignoring the result
+        void (await this.acli.runWithInstruction(prompt));
 
         // Parse the response (in a real scenario, this would parse the JSON response)
         // For now, we'll still use our mock requirements but log that the API call was made
@@ -307,7 +310,8 @@ Format your response as JSON with the following structure:
   ): Promise<Record<string, string>> {
     try {
       // Use ACLI integration to generate code
-      const acli = new AcliIntegration();
+      // Unused variable commented out
+      // const acli = new AcliIntegration();
 
       // Create a structured prompt for code generation
       const prompt = `Generate code based on the following requirements:
@@ -328,7 +332,8 @@ Format your response as a JSON object where keys are filenames and values are fi
 
       try {
         // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
+        // Using void to acknowledge we are ignoring the result
+        void (await this.acli.runWithInstruction(prompt));
         log("Successfully called Rovo Dev API for code generation", "success");
 
         // In a production environment, we would parse the JSON response
@@ -525,7 +530,8 @@ describe('UserService', () => {
   ): Promise<Record<string, any>> {
     try {
       // Use ACLI integration to test the code
-      const acli = new AcliIntegration();
+      // Unused variable commented out
+      // const acli = new AcliIntegration();
 
       // Create a structured prompt for code testing
       const prompt = `Test the following code:
@@ -559,7 +565,8 @@ Format your response as a JSON object with the following structure:
 
       try {
         // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
+        // Using void to acknowledge we are ignoring the result
+        void (await this.acli.runWithInstruction(prompt));
         log("Successfully called Rovo Dev API for code testing", "success");
 
         // In a production environment, we would parse the JSON response
@@ -603,7 +610,8 @@ Format your response as a JSON object with the following structure:
       }
 
       // Use ACLI integration to optimize the code
-      const acli = new AcliIntegration();
+      // Unused variable commented out
+      // const acli = new AcliIntegration();
 
       // Create a structured prompt for code optimization
       const prompt = `Optimize the following code:
@@ -631,7 +639,8 @@ Format your response as a JSON object where keys are filenames and values are op
 
       try {
         // Make the API call
-        const result = await this.acli.runWithInstruction(prompt);
+        // Using void to acknowledge we are ignoring the result
+        void (await this.acli.runWithInstruction(prompt));
         log(
           "Successfully called Rovo Dev API for code optimization",
           "success",
@@ -668,8 +677,33 @@ Format your response as a JSON object where keys are filenames and values are op
       // Write each file
       for (const [filename, content] of Object.entries(code)) {
         const filePath = path.join(outputDir, filename);
-        fs.writeFileSync(filePath, content);
-        log(`Saved file: ${filePath}`, "info");
+
+        // Acquire lock before writing to file
+        let lockAcquired = false;
+        if (this.fileLockManager) {
+          log(`Acquiring lock for file: ${filePath}`, "info");
+          lockAcquired = await this.acquireFileLock(filePath);
+
+          if (!lockAcquired) {
+            log(
+              `Failed to acquire lock for file: ${filePath}, skipping...`,
+              "warn",
+            );
+            continue;
+          }
+        }
+
+        try {
+          // Write file
+          fs.writeFileSync(filePath, content);
+          log(`Saved file: ${filePath}`, "info");
+        } finally {
+          // Release lock if it was acquired
+          if (lockAcquired && this.fileLockManager) {
+            await this.releaseFileLock(filePath);
+            log(`Released lock for file: ${filePath}`, "info");
+          }
+        }
       }
     } catch (error) {
       log(`Error saving code to files: ${error}`, "error");

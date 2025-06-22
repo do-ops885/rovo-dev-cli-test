@@ -3,17 +3,42 @@
  */
 
 import chalk from "chalk";
+import { FileLockManager } from "./file-lock-manager";
+import { Memory } from "./memory";
 
 export class Orchestrator {
   private agents: Map<string, any> = new Map();
   private isRunning: boolean = false;
+  private fileLockManager: FileLockManager;
+
+  constructor() {
+    // Initialize the file lock manager with a shared memory instance
+    const memory = new Memory();
+    this.fileLockManager = new FileLockManager(memory);
+  }
 
   /**
    * Start the orchestrator
    */
   public start(): void {
     this.isRunning = true;
+
+    // Start periodic cleanup of expired locks
+    this.startLockCleanup();
+
     console.log(chalk.green("Orchestrator started"));
+  }
+
+  /**
+   * Start periodic cleanup of expired locks
+   */
+  private startLockCleanup(): void {
+    // Clean up expired locks every 30 seconds
+    setInterval(() => {
+      if (this.isRunning) {
+        this.fileLockManager.cleanupExpiredLocks();
+      }
+    }, 30000);
   }
 
   /**
@@ -21,6 +46,10 @@ export class Orchestrator {
    */
   public stop(): void {
     this.isRunning = false;
+
+    // Clean up any remaining locks
+    this.fileLockManager.cleanupExpiredLocks();
+
     console.log(chalk.yellow("Orchestrator stopped"));
   }
 
@@ -28,6 +57,11 @@ export class Orchestrator {
    * Register a new agent
    */
   public registerAgent(name: string, agent: any): void {
+    // Configure agent to use file locks by default
+    if (agent.config) {
+      agent.config.useFileLocks = true;
+    }
+
     this.agents.set(name, agent);
     console.log(chalk.blue(`Agent ${name} registered`));
   }
@@ -102,7 +136,7 @@ export class Orchestrator {
     };
 
     try {
-      let results = [];
+      let results: any[] = [];
 
       if (parallel) {
         // Execute tasks in parallel
@@ -130,7 +164,7 @@ export class Orchestrator {
         console.log(chalk.blue("Executing tasks sequentially..."));
 
         results = [];
-        let previousResult = null;
+        let previousResult: any = null;
 
         for (const name of validAgents) {
           const agent = this.agents.get(name);

@@ -6,12 +6,16 @@ import os from 'os';
 import { spawn } from 'child_process';
 
 // Mock fs
-vi.mock('fs', () => ({
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn()
-}));
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn()
+  };
+});
 
 // Mock child_process
 vi.mock('child_process', () => ({

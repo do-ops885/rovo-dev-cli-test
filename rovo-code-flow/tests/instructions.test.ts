@@ -6,12 +6,16 @@ import os from 'os';
 import { AcliIntegration } from '../src/acli-integration';
 
 // Mock fs
-vi.mock('fs', () => ({
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn()
-}));
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn()
+  };
+});
 
 // Mock AcliIntegration
 vi.mock('../src/acli-integration', () => ({
@@ -23,6 +27,9 @@ vi.mock('../src/acli-integration', () => ({
 
 // Mock inquirer
 vi.mock('inquirer', () => ({
+  default: {
+    prompt: vi.fn()
+  },
   prompt: vi.fn()
 }));
 

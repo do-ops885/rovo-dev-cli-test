@@ -20,26 +20,26 @@ describe('CLI Commands', () => {
     it('should initialize SPARC when specified', () => {
       const consoleSpy = vi.spyOn(console, 'log');
       initCommand({ sparc: true });
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Initializing SPARC modes'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Initializing rovo-code-flow"));
     });
     
     it('should initialize Event Modeling when specified', () => {
       const consoleSpy = vi.spyOn(console, 'log');
       initCommand({ event: true });
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Initializing Event Modeling modes'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Initializing rovo-code-flow"));
     });
   });
   
   describe('startCommand', () => {
-    it('should start in CLI mode by default', () => {
+    it('should start in CLI mode by default', async () => {
       const consoleSpy = vi.spyOn(console, 'log');
-      startCommand({});
+      await startCommand({});
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting in CLI mode'));
     });
     
-    it('should start UI with specified port', () => {
+    it('should start UI with specified port', async () => {
       const consoleSpy = vi.spyOn(console, 'log');
-      startCommand({ ui: true, port: '4000' });
+      await startCommand({ ui: true, port: '4000' });
       expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Starting UI on port 4000'));
     });
   });

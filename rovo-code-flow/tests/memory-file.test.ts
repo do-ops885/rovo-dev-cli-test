@@ -5,14 +5,18 @@ import path from 'path';
 import os from 'os';
 
 // Mock fs
-vi.mock('fs', () => ({
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn(),
-  statSync: vi.fn(),
-  readdirSync: vi.fn()
-}));
+vi.mock('fs', async () => {
+  const actual = await vi.importActual('fs');
+  return {
+    ...actual,
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn(),
+    statSync: vi.fn(),
+    readdirSync: vi.fn()
+  };
+});
 
 describe('MemoryFileManager', () => {
   let memoryManager: MemoryFileManager;

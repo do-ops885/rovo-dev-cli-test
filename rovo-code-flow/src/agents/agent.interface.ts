@@ -76,6 +76,22 @@ export interface TaskResult {
   suggestions?: string[];
 }
 
+/**
+ * Agent lifecycle states
+ */
+export type AgentStatus =
+  | "idle"
+  | "busy"
+  | "error"
+  | "paused"
+  | "initializing"
+  | "terminated";
+
+/**
+ * Agent types supported by the system
+ */
+export type AgentType = "SPARC" | "Event" | "Swarm" | "Custom";
+
 export interface Agent {
   /**
    * Unique identifier for the agent
@@ -90,12 +106,12 @@ export interface Agent {
   /**
    * Type of agent (SPARC, Event, etc.)
    */
-  type: string;
+  type: AgentType;
 
   /**
    * Current status of the agent
    */
-  status: "idle" | "busy" | "error" | "paused";
+  status: AgentStatus;
 
   /**
    * Agent capabilities
@@ -149,4 +165,19 @@ export interface Agent {
     agent: Agent,
     task: string | TaskContext,
   ): Promise<TaskResult>;
+
+  /**
+   * Acquire a lock on a file
+   * @param filePath Path to the file to lock
+   * @param timeoutMs Optional timeout in milliseconds
+   * @returns Promise resolving to true if lock was acquired, false otherwise
+   */
+  acquireFileLock?(filePath: string, timeoutMs?: number): Promise<boolean>;
+
+  /**
+   * Release a lock on a file
+   * @param filePath Path to the file to unlock
+   * @returns Promise resolving to true if lock was released, false otherwise
+   */
+  releaseFileLock?(filePath: string): Promise<boolean>;
 }

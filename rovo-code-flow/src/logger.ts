@@ -6,6 +6,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import chalk from "chalk";
+import { validateFilePath } from "./utils";
+import { LoggingError } from "./errors";
 
 export enum LogLevel {
   DEBUG = 0,
@@ -15,10 +17,23 @@ export enum LogLevel {
 }
 
 export class Logger {
+  // Singleton instance for centralized logging
+  private static instance: Logger;
+
   private logDir: string;
   private logFile: string;
   private level: LogLevel;
   private writeToConsole: boolean;
+
+  /**
+   * Get the singleton instance of the logger
+   */
+  public static getInstance(): Logger {
+    if (!Logger.instance) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
 
   constructor(level: LogLevel = LogLevel.INFO, writeToConsole: boolean = true) {
     this.level = level;
@@ -102,7 +117,8 @@ export class Logger {
               return String(arg);
             })
             .join(" ");
-      } catch (_error) {
+      } catch {
+        // Error is intentionally ignored
         formattedMessage += " [Error formatting args]";
       }
     }
@@ -112,11 +128,19 @@ export class Logger {
 
     // Write to log file
     try {
-      fs.appendFileSync(this.logFile, logEntry + "\n");
+      // Validate file path
+      const validatedPath = validateFilePath(this.logFile, [this.logDir]);
+      fs.appendFileSync(validatedPath, logEntry + "\n");
     } catch (error) {
       if (this.writeToConsole) {
         console.error(chalk.red("Error writing to log file:"), error);
       }
+
+      // Throw a logging error for better error handling
+      throw new LoggingError(`Failed to write to log file: ${error.message}`, {
+        cause: error,
+        context: { logFile: this.logFile, message: formattedMessage },
+      });
     }
 
     // Write to console if enabled
@@ -165,12 +189,20 @@ export class Logger {
       return fs
         .readdirSync(this.logDir)
         .filter((file) => file.endsWith(".log"))
-        .map((file) => path.join(this.logDir, file));
+        .map((file) => {
+          // Validate each log file path
+          return validateFilePath(path.join(this.logDir, file), [this.logDir]);
+        });
     } catch (error) {
       if (this.writeToConsole) {
         console.error(chalk.red("Error getting log files:"), error);
       }
-      return [];
+
+      // Throw a logging error for better error handling
+      throw new LoggingError(`Failed to get log files: ${error.message}`, {
+        cause: error,
+        context: { logDir: this.logDir },
+      });
     }
   }
 

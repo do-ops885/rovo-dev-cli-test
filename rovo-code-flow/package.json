@@ -1,6 +1,7 @@
 {
   "name": "rovo-code-flow",
   "version": "0.1.0",
+  "type": "module",
   "description": "Multi‑agent orchestration CLI for Rovo Dev — combining SPARC & Event Modeling",
   "author": "d.o.",
   "license": "ISC",
@@ -38,6 +39,7 @@
     "chalk": "^5.4.1",
     "commander": "^14.0.0",
     "inquirer": "^12.6.3",
+    "yaml": "^2.8.0",
     "zod": "^3.25.67"
   },
   "devDependencies": {

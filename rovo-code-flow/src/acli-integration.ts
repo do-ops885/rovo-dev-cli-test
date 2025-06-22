@@ -8,14 +8,35 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { Config } from "./config";
+import { log } from "./utils";
+
+// Default retry configuration
+const DEFAULT_RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 10000,
+};
+
+export interface RetryConfig {
+  maxRetries: number;
+  initialDelayMs: number;
+  maxDelayMs: number;
+}
 
 export class AcliIntegration {
   private config: Config;
   private rovodevConfigPath: string;
+  private retryConfig: RetryConfig;
 
-  constructor() {
+  constructor(retryConfig?: Partial<RetryConfig>) {
     this.config = new Config();
     this.rovodevConfigPath = path.join(os.homedir(), ".rovodev");
+
+    // Set retry configuration
+    this.retryConfig = {
+      ...DEFAULT_RETRY_CONFIG,
+      ...retryConfig,
+    };
   }
 
   /**
@@ -149,31 +170,95 @@ export class AcliIntegration {
   /**
    * Run Rovo Dev with specific instruction
    */
-  public async runWithInstruction(instruction: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      console.log(
-        chalk.blue(`Running Rovo Dev with instruction: "${instruction}"`),
-      );
+  public async runWithInstruction(instruction: string): Promise<string> {
+    return this.executeWithRetry(async () => {
+      return new Promise<string>((resolve, reject) => {
+        log(`Running Rovo Dev with instruction: "${instruction}"`, "info");
 
-      const acli = spawn("acli", ["rovodev", "run", instruction], {
-        stdio: "inherit",
+        let stdoutData = "";
+        let stderrData = "";
+
+        const acli = spawn("acli", ["rovodev", "run", instruction], {
+          stdio: ["inherit", "pipe", "pipe"],
+        });
+
+        acli.stdout.on("data", (data) => {
+          const chunk = data.toString();
+          stdoutData += chunk;
+          process.stdout.write(chunk);
+        });
+
+        acli.stderr.on("data", (data) => {
+          const chunk = data.toString();
+          stderrData += chunk;
+          process.stderr.write(chunk);
+        });
+
+        acli.on("error", (error) => {
+          log(`Failed to run Rovo Dev: ${error}`, "error");
+          reject(new Error(`Failed to run Rovo Dev: ${error.message}`));
+        });
+
+        acli.on("close", (code) => {
+          if (code === 0) {
+            log("Rovo Dev instruction completed successfully", "success");
+            resolve(stdoutData);
+          } else {
+            const errorMsg = `Rovo Dev exited with code ${code}`;
+            log(errorMsg, "error");
+            reject(new Error(errorMsg + (stderrData ? `: ${stderrData}` : "")));
+          }
+        });
       });
+    }, "runWithInstruction");
+  }
 
-      acli.on("error", (error) => {
-        console.error(chalk.red("Failed to run Rovo Dev:"), error);
-        resolve(false);
-      });
+  /**
+   * Execute a function with retry logic
+   */
+  private async executeWithRetry<T>(
+    fn: () => Promise<T>,
+    operationName: string,
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    let delay = this.retryConfig.initialDelayMs;
 
-      acli.on("close", (code) => {
-        if (code === 0) {
-          console.log(chalk.green("Rovo Dev instruction completed."));
-          resolve(true);
+    for (
+      let attempt = 1;
+      attempt <= this.retryConfig.maxRetries + 1;
+      attempt++
+    ) {
+      try {
+        log(`Executing ${operationName} - attempt ${attempt}`, "info");
+        return await fn();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        if (attempt <= this.retryConfig.maxRetries) {
+          log(
+            `Error in ${operationName}: ${lastError.message}. Retrying in ${delay}ms...`,
+            "warn",
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+
+          // Exponential backoff with jitter
+          delay = Math.min(
+            delay * 2 * (0.9 + Math.random() * 0.2),
+            this.retryConfig.maxDelayMs,
+          );
         } else {
-          console.error(chalk.red(`Rovo Dev exited with code ${code}`));
-          resolve(false);
+          // Max retries reached
+          log(
+            `${operationName} failed after ${this.retryConfig.maxRetries} retries: ${lastError.message}`,
+            "error",
+          );
+          throw lastError;
         }
-      });
-    });
+      }
+    }
+
+    // This should never happen due to the for loop structure, but TypeScript needs it
+    throw lastError || new Error(`Unknown error in ${operationName}`);
   }
 
   /**

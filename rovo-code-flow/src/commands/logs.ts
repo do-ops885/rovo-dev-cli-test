@@ -38,7 +38,7 @@ export function logsCommand(action: string, options: LogsOptions = {}): void {
       if (options.level) {
         setLogLevel(logger, options.level);
       } else {
-        showLogLevel(logger);
+        showLogLevel();
       }
       break;
 
@@ -175,7 +175,7 @@ function setLogLevel(logger: Logger, level: string): void {
 /**
  * Show current log level
  */
-function showLogLevel(_logger: Logger): void {
+function showLogLevel(): void {
   // Since the current level is private in the Logger class,
   // we can't directly access it. We'll just show the available levels.
   console.log(chalk.blue("Available log levels:"));

@@ -7,6 +7,7 @@ import inquirer from "inquirer";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import yaml from "yaml";
 import { AcliIntegration } from "../acli-integration";
 
 interface InstructionsOptions {
@@ -14,6 +15,15 @@ interface InstructionsOptions {
   add?: boolean;
   remove?: string;
   run?: string;
+}
+
+interface Instruction {
+  name: string;
+  prompt: string;
+}
+
+interface InstructionsFile {
+  instructions: Instruction[];
 }
 
 export async function instructionsCommand(
@@ -73,7 +83,7 @@ async function listInstructions(): Promise<void> {
   }
 
   try {
-    const yaml = require("yaml");
+    // yaml is now imported at the top of the file
     const content = fs.readFileSync(instructionsPath, "utf8");
     const parsed = yaml.parse(content);
 
@@ -126,8 +136,8 @@ async function addInstruction(): Promise<void> {
   );
 
   try {
-    const yaml = require("yaml");
-    let parsed = { instructions: [] };
+    // yaml is now imported at the top of the file
+    let parsed: InstructionsFile = { instructions: [] };
 
     if (fs.existsSync(instructionsPath)) {
       const content = fs.readFileSync(instructionsPath, "utf8");
@@ -165,7 +175,10 @@ async function addInstruction(): Promise<void> {
     }
 
     // Add the new instruction
-    parsed.instructions.push({ name, prompt });
+    if (!Array.isArray(parsed.instructions)) {
+      parsed.instructions = [];
+    }
+    parsed.instructions.push({ name, prompt } as Instruction);
 
     // Write back to the file
     fs.writeFileSync(instructionsPath, yaml.stringify(parsed));
@@ -192,7 +205,7 @@ async function removeInstruction(name: string): Promise<void> {
   }
 
   try {
-    const yaml = require("yaml");
+    // yaml is now imported at the top of the file
     const content = fs.readFileSync(instructionsPath, "utf8");
     const parsed = yaml.parse(content);
 
@@ -253,7 +266,7 @@ async function runInstruction(name: string): Promise<void> {
   }
 
   try {
-    const yaml = require("yaml");
+    // yaml is now imported at the top of the file
     const content = fs.readFileSync(instructionsPath, "utf8");
     const parsed = yaml.parse(content);
 

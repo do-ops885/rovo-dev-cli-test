@@ -3,7 +3,8 @@ import { Orchestrator } from "../orchestrator";
 import { CoderAgent } from "../agents/sparc/coder-agent";
 import { ModelerAgent } from "../agents/event/modeler-agent";
 import type { Agent, TaskResult } from "../agents/agent.interface";
-import { TaskContext } from "../agents/agent.interface";
+// TaskContext is imported but not used
+// import { TaskContext } from "../agents/agent.interface";
 
 interface SwarmOptions {
   parallel?: boolean;
