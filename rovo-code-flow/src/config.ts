@@ -27,7 +27,10 @@ export class Config {
         try {
           this.config = JSON.parse(data);
         } catch (parseError) {
-          console.error("Error parsing configuration file, creating default config:", parseError);
+          console.error(
+            "Error parsing configuration file, creating default config:",
+            parseError,
+          );
           this.createDefaultConfig();
         }
       } else {
@@ -38,7 +41,7 @@ export class Config {
       this.createDefaultConfig();
     }
   }
-  
+
   /**
    * Create default configuration
    */

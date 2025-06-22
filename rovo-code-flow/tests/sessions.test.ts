@@ -30,9 +30,8 @@ vi.mock('../src/utils', () => ({
 }));
 
 // Mock inquirer
-const mockInquirerPrompt = vi.fn();
 vi.mock('inquirer', () => ({
-  prompt: mockInquirerPrompt
+  prompt: vi.fn()
 }));
 
 describe('sessionsCommand', () => {
@@ -81,8 +80,8 @@ describe('sessionsCommand', () => {
   describe('clearSession', () => {
     it('should clear the current session if confirmed', async () => {
       // Mock inquirer prompt
-      const mockPrompt = vi.fn().mockResolvedValue({ confirm: true });
-      vi.mocked(require('inquirer').prompt).mockImplementation(mockPrompt);
+      const { prompt } = require('inquirer');
+      prompt.mockResolvedValue({ confirm: true });
       
       // Mock session files and details
       const mockSessionFile = path.join(os.homedir(), '.rovodev', 'sessions', 'session1.json');

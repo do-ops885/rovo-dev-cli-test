@@ -23,7 +23,8 @@ export class McpManager {
    * @param configPath Optional custom path for the MCP configuration file (used for testing)
    */
   constructor(configPath?: string) {
-    this.mcpConfigPath = configPath || path.join(os.homedir(), ".rovodev", "mcp.json");
+    this.mcpConfigPath =
+      configPath || path.join(os.homedir(), ".rovodev", "mcp.json");
     this.loadConfig();
   }
 
@@ -37,7 +38,10 @@ export class McpManager {
         try {
           this.servers = JSON.parse(data);
         } catch (parseError) {
-          console.error("Error parsing MCP configuration file, creating default config:", parseError);
+          console.error(
+            "Error parsing MCP configuration file, creating default config:",
+            parseError,
+          );
           this.createDefaultConfig();
         }
       } else {
@@ -48,7 +52,7 @@ export class McpManager {
       this.createDefaultConfig();
     }
   }
-  
+
   /**
    * Create default MCP configuration
    */

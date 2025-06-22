@@ -4,41 +4,28 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { AcliIntegration } from '../src/acli-integration';
+import inquirer from 'inquirer';
+import yaml from 'yaml';
 
-// Mock fs
-vi.mock('fs', () => ({
-  default: {
-    existsSync: vi.fn(),
-    mkdirSync: vi.fn(),
-    writeFileSync: vi.fn(),
-    readFileSync: vi.fn()
-  },
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn()
-}));
+// Mock modules
+vi.mock('fs');
+vi.mock('inquirer');
+vi.mock('yaml');
+vi.mock('../src/acli-integration');
 
-// Mock AcliIntegration
-vi.mock('../src/acli-integration', () => ({
-  AcliIntegration: vi.fn().mockImplementation(() => ({
-    initRovoDev: vi.fn().mockResolvedValue(true),
-    runWithInstruction: vi.fn().mockResolvedValue(true)
-  }))
-}));
-
-// Mock inquirer
+// Setup mocks
 const mockInquirerPrompt = vi.fn();
-vi.mock('inquirer', () => ({
-  prompt: mockInquirerPrompt
-}));
+const mockYamlParse = vi.fn();
+const mockYamlStringify = vi.fn();
+const mockAcliRunWithInstruction = vi.fn().mockResolvedValue(true);
 
-// Mock yaml
-const mockParse = vi.fn();
-const mockStringify = vi.fn();
-vi.mock('yaml', () => ({
-  parse: mockParse,
-  stringify: mockStringify
+// Configure mocks
+vi.mocked(inquirer.prompt).mockImplementation(mockInquirerPrompt);
+vi.mocked(yaml.parse).mockImplementation(mockYamlParse);
+vi.mocked(yaml.stringify).mockImplementation(mockYamlStringify);
+vi.mocked(AcliIntegration).mockImplementation(() => ({
+  initRovoDev: vi.fn().mockResolvedValue(true),
+  runWithInstruction: mockAcliRunWithInstruction
 }));
 
 describe('instructionsCommand', () => {
@@ -48,9 +35,8 @@ describe('instructionsCommand', () => {
   
   describe('listInstructions', () => {
     it('should show a message if no instructions are found', async () => {
-      (fs.existsSync as vi.Mock).mockReturnValue(true);
-      
-      mockParse.mockReturnValue({ instructions: [] });
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mockYamlParse.mockReturnValue({ instructions: [] });
       
       const consoleLogSpy = vi.spyOn(console, 'log');
       await instructionsCommand();
@@ -59,9 +45,8 @@ describe('instructionsCommand', () => {
     });
     
     it('should list instructions if they exist', async () => {
-      (fs.existsSync as vi.Mock).mockReturnValue(true);
-      
-      mockParse.mockReturnValue({
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mockYamlParse.mockReturnValue({
         instructions: [
           { name: 'Instruction 1', prompt: 'Test prompt 1' },
           { name: 'Instruction 2', prompt: 'Test prompt 2' }
@@ -80,7 +65,8 @@ describe('instructionsCommand', () => {
   describe('addInstruction', () => {
     it('should add a new instruction', async () => {
       // Mock inquirer prompt
-      mockInquirerPrompt.mockResolvedValue({
+      const { prompt } = require('inquirer');
+      prompt.mockResolvedValue({
         name: 'Test Instruction',
         prompt: 'Test prompt'
       });
@@ -95,7 +81,8 @@ describe('instructionsCommand', () => {
       
       await instructionsCommand({ add: true });
       
-      expect(mockStringify).toHaveBeenCalledWith({
+      const { stringify } = require('yaml');
+      expect(stringify).toHaveBeenCalledWith({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]
@@ -109,7 +96,8 @@ describe('instructionsCommand', () => {
       // Mock fs and yaml
       (fs.existsSync as vi.Mock).mockReturnValue(true);
       
-      mockParse.mockReturnValue({
+      const { parse } = require('yaml');
+      parse.mockReturnValue({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]

@@ -20,9 +20,8 @@ vi.mock('../src/memory-file', () => ({
 }));
 
 // Mock inquirer
-const mockInquirerPrompt = vi.fn();
 vi.mock('inquirer', () => ({
-  prompt: mockInquirerPrompt
+  prompt: vi.fn()
 }));
 
 // Mock command handlers
@@ -49,7 +48,8 @@ describe('interactiveCommand', () => {
   
   it('should run initial prompt if provided', async () => {
     // Mock inquirer to exit after first prompt
-    mockInquirerPrompt.mockResolvedValueOnce({ input: '/exit' });
+    const { prompt } = require('inquirer');
+    prompt.mockResolvedValueOnce({ input: '/exit' });
     
     await interactiveCommand({ initialPrompt: 'Test prompt' });
     
@@ -59,7 +59,8 @@ describe('interactiveCommand', () => {
   
   it('should handle command with / prefix', async () => {
     // First prompt returns a command, second prompt exits
-    mockInquirerPrompt
+    const { prompt } = require('inquirer');
+    prompt
       .mockResolvedValueOnce({ input: '/help' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -71,7 +72,8 @@ describe('interactiveCommand', () => {
   
   it('should handle memory note with # prefix', async () => {
     // First prompt adds a note, second prompt exits
-    mockInquirerPrompt
+    const { prompt } = require('inquirer');
+    prompt
       .mockResolvedValueOnce({ input: '# Test note' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -83,7 +85,8 @@ describe('interactiveCommand', () => {
   
   it('should handle memory note removal with #! prefix', async () => {
     // First prompt removes a note, second prompt exits
-    mockInquirerPrompt
+    const { prompt } = require('inquirer');
+    prompt
       .mockResolvedValueOnce({ input: '#! Test note' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -95,7 +98,8 @@ describe('interactiveCommand', () => {
   
   it('should run regular prompt', async () => {
     // First prompt is a regular prompt, second prompt exits
-    mockInquirerPrompt
+    const { prompt } = require('inquirer');
+    prompt
       .mockResolvedValueOnce({ input: 'Test regular prompt' })
       .mockResolvedValueOnce({ input: '/exit' });
     

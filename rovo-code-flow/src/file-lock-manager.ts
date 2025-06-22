@@ -93,10 +93,10 @@ export class FileLockManager {
 
         // Store lock in memory
         const locks = this.memory.retrieve("file_locks");
-        const locksObj: Record<string, FileLock> =
-          typeof locks === "undefined" ? {} : locks;
-        locks[normalizedPath] = lock;
-        this.memory.store("file_locks", locks);
+        // If locks is undefined, initialize it as an empty object
+        const locksObj = typeof locks === "undefined" ? {} : locks;
+        locksObj[normalizedPath] = lock;
+        this.memory.store("file_locks", locksObj);
 
         log(`Lock acquired for ${normalizedPath} by agent ${agentId}`, "info");
         return true;
