@@ -92,7 +92,8 @@ export class FileLockManager {
         fs.writeFileSync(lockFilePath, JSON.stringify(lock));
 
         // Store lock in memory
-        const locks = this.memory.retrieve("file_locks") || {};
+        const locks = this.memory.retrieve("file_locks");
+        const locksObj: Record<string, FileLock> = typeof locks === "undefined" ? {} : locks;
         locks[normalizedPath] = lock;
         this.memory.store("file_locks", locks);
 
