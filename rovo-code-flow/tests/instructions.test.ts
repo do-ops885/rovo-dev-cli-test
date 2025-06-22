@@ -65,39 +65,33 @@ describe('instructionsCommand', () => {
   describe('addInstruction', () => {
     it('should add a new instruction', async () => {
       // Mock inquirer prompt
-      const { prompt } = require('inquirer');
-      prompt.mockResolvedValue({
+      mockInquirerPrompt.mockResolvedValue({
         name: 'Test Instruction',
         prompt: 'Test prompt'
       });
       
       // Mock fs and yaml
-      (fs.existsSync as vi.Mock).mockReturnValue(true);
-      
-      const yaml = require('yaml');
-      (yaml.parse as vi.Mock).mockReturnValue({
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mockYamlParse.mockReturnValue({
         instructions: []
       });
       
       await instructionsCommand({ add: true });
       
-      const { stringify } = require('yaml');
-      expect(stringify).toHaveBeenCalledWith({
+      expect(mockYamlStringify).toHaveBeenCalledWith({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]
       });
-      expect(fs.writeFileSync).toHaveBeenCalled();
+      expect(vi.mocked(fs.writeFileSync)).toHaveBeenCalled();
     });
   });
   
   describe('runInstruction', () => {
     it('should run an instruction', async () => {
       // Mock fs and yaml
-      (fs.existsSync as vi.Mock).mockReturnValue(true);
-      
-      const { parse } = require('yaml');
-      parse.mockReturnValue({
+      vi.mocked(fs.existsSync).mockReturnValue(true);
+      mockYamlParse.mockReturnValue({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]
@@ -105,8 +99,7 @@ describe('instructionsCommand', () => {
       
       await instructionsCommand({ run: 'Test Instruction' });
       
-      const acliInstance = new AcliIntegration();
-      expect(acliInstance.runWithInstruction).toHaveBeenCalledWith('Test prompt');
+      expect(mockAcliRunWithInstruction).toHaveBeenCalledWith('Test prompt');
     });
   });
 });
