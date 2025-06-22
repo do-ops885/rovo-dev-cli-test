@@ -31,7 +31,7 @@ export interface TaskContext {
   /**
    * Additional metadata
    */
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface TaskResult {
@@ -48,7 +48,7 @@ export interface TaskResult {
   /**
    * Output artifacts (e.g., code, documentation)
    */
-  artifacts?: Record<string, any>;
+  artifacts?: Record<string, unknown>;
 
   /**
    * Execution time in milliseconds
@@ -121,7 +121,7 @@ export interface Agent {
   /**
    * Agent configuration
    */
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 
   /**
    * Initialize the agent
@@ -151,12 +151,12 @@ export interface Agent {
   /**
    * Get agent information
    */
-  getInfo(): any;
+  getInfo(): unknown;
 
   /**
    * Get agent metrics
    */
-  getMetrics(): Promise<Record<string, any>>;
+  getMetrics(): Promise<Record<string, unknown>>;
 
   /**
    * Collaborate with another agent
