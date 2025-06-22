@@ -20,11 +20,9 @@ vi.mock('../src/memory-file', () => ({
 }));
 
 // Mock inquirer
+const mockInquirerPrompt = vi.fn();
 vi.mock('inquirer', () => ({
-  default: {
-    prompt: vi.fn()
-  },
-  prompt: vi.fn()
+  prompt: mockInquirerPrompt
 }));
 
 // Mock command handlers
@@ -50,9 +48,8 @@ describe('interactiveCommand', () => {
   });
   
   it('should run initial prompt if provided', async () => {
-    const inquirer = require('inquirer');
     // Mock inquirer to exit after first prompt
-    (inquirer.prompt as vi.Mock).mockResolvedValueOnce({ input: '/exit' });
+    mockInquirerPrompt.mockResolvedValueOnce({ input: '/exit' });
     
     await interactiveCommand({ initialPrompt: 'Test prompt' });
     
@@ -61,9 +58,8 @@ describe('interactiveCommand', () => {
   });
   
   it('should handle command with / prefix', async () => {
-    const inquirer = require('inquirer');
     // First prompt returns a command, second prompt exits
-    (inquirer.prompt as vi.Mock)
+    mockInquirerPrompt
       .mockResolvedValueOnce({ input: '/help' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -74,9 +70,8 @@ describe('interactiveCommand', () => {
   });
   
   it('should handle memory note with # prefix', async () => {
-    const inquirer = require('inquirer');
     // First prompt adds a note, second prompt exits
-    (inquirer.prompt as vi.Mock)
+    mockInquirerPrompt
       .mockResolvedValueOnce({ input: '# Test note' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -87,9 +82,8 @@ describe('interactiveCommand', () => {
   });
   
   it('should handle memory note removal with #! prefix', async () => {
-    const inquirer = require('inquirer');
     // First prompt removes a note, second prompt exits
-    (inquirer.prompt as vi.Mock)
+    mockInquirerPrompt
       .mockResolvedValueOnce({ input: '#! Test note' })
       .mockResolvedValueOnce({ input: '/exit' });
     
@@ -100,9 +94,8 @@ describe('interactiveCommand', () => {
   });
   
   it('should run regular prompt', async () => {
-    const inquirer = require('inquirer');
     // First prompt is a regular prompt, second prompt exits
-    (inquirer.prompt as vi.Mock)
+    mockInquirerPrompt
       .mockResolvedValueOnce({ input: 'Test regular prompt' })
       .mockResolvedValueOnce({ input: '/exit' });
     

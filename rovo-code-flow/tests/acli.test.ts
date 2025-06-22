@@ -11,25 +11,28 @@ vi.mock('child_process', () => ({
 }));
 
 // Mock fs
-vi.mock('fs', () => ({
-  default: {
-    existsSync: vi.fn(),
+vi.mock('fs', () => {
+  return {
+    default: {
+      existsSync: vi.fn().mockReturnValue(true),
+      mkdirSync: vi.fn(),
+      writeFileSync: vi.fn(),
+      readFileSync: vi.fn().mockReturnValue('{}')
+    },
+    existsSync: vi.fn().mockReturnValue(true),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
-    readFileSync: vi.fn()
-  },
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn()
-}));
+    readFileSync: vi.fn().mockReturnValue('{}')
+  };
+});
 
 describe('AcliIntegration', () => {
   let acli: AcliIntegration;
   const mockSpawn = spawn as unknown as vi.Mock;
+  const testConfigPath = path.join(os.tmpdir(), 'test-rovodev');
   
   beforeEach(() => {
-    acli = new AcliIntegration();
+    acli = new AcliIntegration({}, testConfigPath);
     vi.clearAllMocks();
   });
   
@@ -81,7 +84,7 @@ describe('AcliIntegration', () => {
       const result = await acli.initRovoDev();
       
       expect(result).toBe(true);
-      expect(fs.mkdirSync).toHaveBeenCalledWith(path.join(os.homedir(), '.rovodev'), { recursive: true });
+      expect(fs.mkdirSync).toHaveBeenCalledWith(testConfigPath, { recursive: true });
       expect(fs.writeFileSync).toHaveBeenCalledTimes(3); // config.yml, instructions.yml, mcp.json
     });
     
@@ -148,14 +151,28 @@ describe('AcliIntegration', () => {
         return { on: mockOn };
       });
       
+      const mockStdout = {
+        on: vi.fn((event, callback) => {
+          if (event === 'data') {
+            callback('Test output');
+          }
+        })
+      };
+      
+      const mockStderr = {
+        on: vi.fn()
+      };
+      
       mockSpawn.mockReturnValue({
-        on: mockOn
+        on: mockOn,
+        stdout: mockStdout,
+        stderr: mockStderr
       });
       
       const result = await acli.runWithInstruction('Explain this repository');
       
-      expect(result).toBe(true);
-      expect(mockSpawn).toHaveBeenCalledWith('acli', ['rovodev', 'run', 'Explain this repository'], { stdio: 'inherit' });
+      expect(typeof result).toBe('string');
+      expect(mockSpawn).toHaveBeenCalledWith('acli', ['rovodev', 'run', 'Explain this repository'], { stdio: ['inherit', 'pipe', 'pipe'] });
     });
   });
 });

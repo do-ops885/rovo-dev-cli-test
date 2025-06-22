@@ -18,8 +18,12 @@ export class McpManager {
   private servers: Record<string, McpServer> = {};
   private activeServers: Map<string, any> = new Map();
 
-  constructor() {
-    this.mcpConfigPath = path.join(os.homedir(), ".rovodev", "mcp.json");
+  /**
+   * Creates a new MCP Manager instance
+   * @param configPath Optional custom path for the MCP configuration file (used for testing)
+   */
+  constructor(configPath?: string) {
+    this.mcpConfigPath = configPath || path.join(os.homedir(), ".rovodev", "mcp.json");
     this.loadConfig();
   }
 
@@ -29,21 +33,33 @@ export class McpManager {
   private loadConfig(): void {
     try {
       if (fs.existsSync(this.mcpConfigPath)) {
-        const config = JSON.parse(fs.readFileSync(this.mcpConfigPath, "utf8"));
-        this.servers = config;
+        const data = fs.readFileSync(this.mcpConfigPath, "utf8");
+        try {
+          this.servers = JSON.parse(data);
+        } catch (parseError) {
+          console.error("Error parsing MCP configuration file, creating default config:", parseError);
+          this.createDefaultConfig();
+        }
       } else {
-        // Create default config
-        this.servers = {
-          "web-fetcher": {
-            command: "npx",
-            args: ["-y", "fetcher-mcp"],
-          },
-        };
-        this.saveConfig();
+        this.createDefaultConfig();
       }
     } catch (error) {
       console.error("Error loading MCP configuration:", error);
+      this.createDefaultConfig();
     }
+  }
+  
+  /**
+   * Create default MCP configuration
+   */
+  private createDefaultConfig(): void {
+    this.servers = {
+      "web-fetcher": {
+        command: "npx",
+        args: ["-y", "fetcher-mcp"],
+      },
+    };
+    this.saveConfig();
   }
 
   /**

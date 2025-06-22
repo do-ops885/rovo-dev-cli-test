@@ -6,10 +6,14 @@ import os from 'os';
 import { spawn } from 'child_process';
 
 // Mock fs
-vi.mock('fs', async () => {
-  const actual = await vi.importActual('fs');
+vi.mock('fs', () => {
   return {
-    ...actual,
+    default: {
+      existsSync: vi.fn(),
+      mkdirSync: vi.fn(),
+      writeFileSync: vi.fn(),
+      readFileSync: vi.fn()
+    },
     existsSync: vi.fn(),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
@@ -25,10 +29,11 @@ vi.mock('child_process', () => ({
 describe('McpManager', () => {
   let mcpManager: McpManager;
   const mockSpawn = spawn as unknown as vi.Mock;
+  const testConfigPath = path.join(os.tmpdir(), 'test-mcp.json');
   
   beforeEach(() => {
     vi.clearAllMocks();
-    mcpManager = new McpManager();
+    mcpManager = new McpManager(testConfigPath);
   });
   
   describe('constructor', () => {
@@ -41,10 +46,10 @@ describe('McpManager', () => {
         }
       }));
       
-      mcpManager = new McpManager();
+      mcpManager = new McpManager(testConfigPath);
       
       expect(fs.readFileSync).toHaveBeenCalledWith(
-        path.join(os.homedir(), '.rovodev', 'mcp.json'),
+        testConfigPath,
         'utf8'
       );
     });
@@ -52,10 +57,10 @@ describe('McpManager', () => {
     it('should create default config if it does not exist', () => {
       (fs.existsSync as vi.Mock).mockReturnValue(false);
       
-      mcpManager = new McpManager();
+      mcpManager = new McpManager(testConfigPath);
       
       expect(fs.writeFileSync).toHaveBeenCalledWith(
-        path.join(os.homedir(), '.rovodev', 'mcp.json'),
+        testConfigPath,
         expect.stringContaining('web-fetcher')
       );
     });
@@ -66,7 +71,7 @@ describe('McpManager', () => {
       mcpManager.addServer('test-server', 'test-command', ['arg1', 'arg2']);
       
       expect(fs.writeFileSync).toHaveBeenCalledWith(
-        path.join(os.homedir(), '.rovodev', 'mcp.json'),
+        testConfigPath,
         expect.stringContaining('test-server')
       );
     });
@@ -83,7 +88,7 @@ describe('McpManager', () => {
         }
       }));
       
-      mcpManager = new McpManager();
+      mcpManager = new McpManager(testConfigPath);
       
       const result = mcpManager.removeServer('test-server');
       
@@ -117,7 +122,7 @@ describe('McpManager', () => {
         }
       }));
       
-      mcpManager = new McpManager();
+      mcpManager = new McpManager(testConfigPath);
       
       const result = mcpManager.startServer('test-server');
       

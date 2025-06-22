@@ -24,32 +24,44 @@ export class Config {
     try {
       if (fs.existsSync(this.configPath)) {
         const data = fs.readFileSync(this.configPath, "utf8");
-        this.config = JSON.parse(data);
+        try {
+          this.config = JSON.parse(data);
+        } catch (parseError) {
+          console.error("Error parsing configuration file, creating default config:", parseError);
+          this.createDefaultConfig();
+        }
       } else {
-        // Create default config
-        this.config = {
-          sparc: {
-            enabled: true,
-            modes: ["architect", "coder", "tdd", "security", "devops"],
-          },
-          event: {
-            enabled: false,
-            roles: ["modeler", "timeline", "ui", "state", "mapper"],
-          },
-          ui: {
-            enabled: false,
-            port: 3000,
-          },
-          memory: {
-            persistence: true,
-            encryptionEnabled: false,
-          },
-        };
-        this.save();
+        this.createDefaultConfig();
       }
     } catch (error) {
       console.error("Error loading configuration:", error);
+      this.createDefaultConfig();
     }
+  }
+  
+  /**
+   * Create default configuration
+   */
+  private createDefaultConfig(): void {
+    this.config = {
+      sparc: {
+        enabled: true,
+        modes: ["architect", "coder", "tdd", "security", "devops"],
+      },
+      event: {
+        enabled: false,
+        roles: ["modeler", "timeline", "ui", "state", "mapper"],
+      },
+      ui: {
+        enabled: false,
+        port: 3000,
+      },
+      memory: {
+        persistence: true,
+        encryptionEnabled: false,
+      },
+    };
+    this.save();
   }
 
   /**

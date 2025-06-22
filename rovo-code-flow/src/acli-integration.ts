@@ -28,9 +28,14 @@ export class AcliIntegration {
   private rovodevConfigPath: string;
   private retryConfig: RetryConfig;
 
-  constructor(retryConfig?: Partial<RetryConfig>) {
+  /**
+   * Creates a new ACLI integration instance
+   * @param retryConfig Optional retry configuration
+   * @param configPath Optional custom path for the Rovo Dev configuration directory (used for testing)
+   */
+  constructor(retryConfig?: Partial<RetryConfig>, configPath?: string) {
     this.config = new Config();
-    this.rovodevConfigPath = path.join(os.homedir(), ".rovodev");
+    this.rovodevConfigPath = configPath || path.join(os.homedir(), ".rovodev");
 
     // Set retry configuration
     this.retryConfig = {

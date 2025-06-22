@@ -6,13 +6,22 @@ import os from 'os';
 import * as utils from '../src/utils';
 
 // Mock fs
-vi.mock('fs', () => ({
-  existsSync: vi.fn(),
-  mkdirSync: vi.fn(),
-  writeFileSync: vi.fn(),
-  readFileSync: vi.fn(),
-  readdirSync: vi.fn()
-}));
+vi.mock('fs', () => {
+  return {
+    default: {
+      existsSync: vi.fn(),
+      mkdirSync: vi.fn(),
+      writeFileSync: vi.fn(),
+      readFileSync: vi.fn(),
+      readdirSync: vi.fn()
+    },
+    existsSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn(),
+    readFileSync: vi.fn(),
+    readdirSync: vi.fn()
+  };
+});
 
 // Mock utils
 vi.mock('../src/utils', () => ({
@@ -21,8 +30,9 @@ vi.mock('../src/utils', () => ({
 }));
 
 // Mock inquirer
+const mockInquirerPrompt = vi.fn();
 vi.mock('inquirer', () => ({
-  prompt: vi.fn()
+  prompt: mockInquirerPrompt
 }));
 
 describe('sessionsCommand', () => {
@@ -71,8 +81,8 @@ describe('sessionsCommand', () => {
   describe('clearSession', () => {
     it('should clear the current session if confirmed', async () => {
       // Mock inquirer prompt
-      const inquirer = require('inquirer');
-      (inquirer.prompt as vi.Mock).mockResolvedValue({ confirm: true });
+      const mockPrompt = vi.fn().mockResolvedValue({ confirm: true });
+      vi.mocked(require('inquirer').prompt).mockImplementation(mockPrompt);
       
       // Mock session files and details
       const mockSessionFile = path.join(os.homedir(), '.rovodev', 'sessions', 'session1.json');

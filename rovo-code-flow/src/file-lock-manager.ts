@@ -93,7 +93,8 @@ export class FileLockManager {
 
         // Store lock in memory
         const locks = this.memory.retrieve("file_locks");
-        const locksObj: Record<string, FileLock> = typeof locks === "undefined" ? {} : locks;
+        const locksObj: Record<string, FileLock> =
+          typeof locks === "undefined" ? {} : locks;
         locks[normalizedPath] = lock;
         this.memory.store("file_locks", locks);
 

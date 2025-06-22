@@ -28,17 +28,17 @@ vi.mock('../src/acli-integration', () => ({
 }));
 
 // Mock inquirer
+const mockInquirerPrompt = vi.fn();
 vi.mock('inquirer', () => ({
-  default: {
-    prompt: vi.fn()
-  },
-  prompt: vi.fn()
+  prompt: mockInquirerPrompt
 }));
 
 // Mock yaml
+const mockParse = vi.fn();
+const mockStringify = vi.fn();
 vi.mock('yaml', () => ({
-  parse: vi.fn(),
-  stringify: vi.fn()
+  parse: mockParse,
+  stringify: mockStringify
 }));
 
 describe('instructionsCommand', () => {
@@ -50,8 +50,7 @@ describe('instructionsCommand', () => {
     it('should show a message if no instructions are found', async () => {
       (fs.existsSync as vi.Mock).mockReturnValue(true);
       
-      const yaml = require('yaml');
-      (yaml.parse as vi.Mock).mockReturnValue({ instructions: [] });
+      mockParse.mockReturnValue({ instructions: [] });
       
       const consoleLogSpy = vi.spyOn(console, 'log');
       await instructionsCommand();
@@ -62,8 +61,7 @@ describe('instructionsCommand', () => {
     it('should list instructions if they exist', async () => {
       (fs.existsSync as vi.Mock).mockReturnValue(true);
       
-      const yaml = require('yaml');
-      (yaml.parse as vi.Mock).mockReturnValue({
+      mockParse.mockReturnValue({
         instructions: [
           { name: 'Instruction 1', prompt: 'Test prompt 1' },
           { name: 'Instruction 2', prompt: 'Test prompt 2' }
@@ -82,8 +80,7 @@ describe('instructionsCommand', () => {
   describe('addInstruction', () => {
     it('should add a new instruction', async () => {
       // Mock inquirer prompt
-      const inquirer = require('inquirer');
-      (inquirer.prompt as vi.Mock).mockResolvedValue({
+      mockInquirerPrompt.mockResolvedValue({
         name: 'Test Instruction',
         prompt: 'Test prompt'
       });
@@ -98,7 +95,7 @@ describe('instructionsCommand', () => {
       
       await instructionsCommand({ add: true });
       
-      expect(yaml.stringify).toHaveBeenCalledWith({
+      expect(mockStringify).toHaveBeenCalledWith({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]
@@ -112,8 +109,7 @@ describe('instructionsCommand', () => {
       // Mock fs and yaml
       (fs.existsSync as vi.Mock).mockReturnValue(true);
       
-      const yaml = require('yaml');
-      (yaml.parse as vi.Mock).mockReturnValue({
+      mockParse.mockReturnValue({
         instructions: [
           { name: 'Test Instruction', prompt: 'Test prompt' }
         ]
