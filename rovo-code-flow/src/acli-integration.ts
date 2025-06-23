@@ -35,7 +35,10 @@ export class AcliIntegration {
    */
   constructor(retryConfig?: Partial<RetryConfig>, configPath?: string) {
     this.config = new Config();
-    this.rovodevConfigPath = configPath || path.join(os.homedir(), ".rovodev");
+    this.rovodevConfigPath =
+      configPath !== undefined && configPath.trim() !== ""
+        ? configPath
+        : path.join(os.homedir(), ".rovodev");
 
     // Set retry configuration
     this.retryConfig = {

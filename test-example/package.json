@@ -1,0 +1,28 @@
+{
+  "name": "rovo-code-flow-test-example",
+  "version": "1.0.0",
+  "description": "Comprehensive test suite for rovo-code-flow CLI",
+  "main": "test-runner.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-runner.js",
+    "test:core": "node test-runner.js --category core",
+    "test:agent": "node test-runner.js --category agent",
+    "test:system": "node test-runner.js --category system",
+    "test:tools": "node test-runner.js --category tools",
+    "test:utility": "node test-runner.js --category utility",
+    "test:verbose": "node test-runner.js --verbose",
+    "test:dry-run": "node test-runner.js --dry-run",
+    "clean": "rm -rf results/* test-workspace/.sparc test-workspace/.event-modeling test-workspace/.agent.md test-workspace/.agent.local.md"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

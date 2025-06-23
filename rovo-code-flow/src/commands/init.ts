@@ -13,7 +13,7 @@ interface InitOptions {
 export async function initCommand(options: InitOptions): Promise<void> {
   console.log(chalk.green("Initializing rovo-code-flow..."));
 
-  if (!options.sparc && !options.event) {
+  if (options.sparc !== true && options.event !== true) {
     console.log(
       chalk.yellow(
         "No modes specified. Initializing with default configuration.",
@@ -33,7 +33,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
   const acli = new AcliIntegration();
   await acli.initRovoDev();
 
-  if (options.sparc) {
+  if (options.sparc === true) {
     console.log("Initializing SPARC modes...");
 
     // Update configuration
@@ -87,7 +87,7 @@ rovo-code-flow sparc coder "implement user login"
     console.log(chalk.green("SPARC modes initialized!"));
   }
 
-  if (options.event) {
+  if (options.event === true) {
     console.log("Initializing Event Modeling modes...");
 
     // Update configuration
@@ -152,13 +152,13 @@ rovo-code-flow event ui "map user registration screens"
   console.log('1. Run "rovo-code-flow start" to start the orchestrator');
   console.log('2. Run "rovo-code-flow status" to check system health');
 
-  if (options.sparc) {
+  if (options.sparc === true) {
     console.log(
       '3. Run "rovo-code-flow sparc coder <task>" to use the SPARC coder agent',
     );
   }
 
-  if (options.event) {
+  if (options.event === true) {
     console.log(
       '3. Run "rovo-code-flow event modeler <task>" to use the Event Modeling modeler agent',
     );

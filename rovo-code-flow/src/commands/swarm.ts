@@ -19,9 +19,15 @@ export async function swarmCommand(
   console.log(chalk.green("Initializing agent swarm..."));
   console.log(chalk.blue(`Task: ${task}`));
 
-  const parallel = options.parallel || false;
-  const strategy = options.strategy || "development";
-  const maxAgents = parseInt(options.maxAgents || "3", 10);
+  const parallel = options.parallel === true;
+  const strategy =
+    options.strategy !== undefined && options.strategy.trim() !== ""
+      ? options.strategy
+      : "development";
+  const maxAgents =
+    options.maxAgents !== undefined && options.maxAgents.trim() !== ""
+      ? parseInt(options.maxAgents, 10)
+      : 3;
 
   console.log(chalk.blue(`Mode: ${parallel ? "Parallel" : "Sequential"}`));
   console.log(chalk.blue(`Strategy: ${strategy}`));
@@ -99,7 +105,7 @@ export async function swarmCommand(
       console.log(`\n${agent.name}: ${statusColor(status)}`);
       console.log(`Message: ${result.message}`);
 
-      if (result.executionTime) {
+      if (result.executionTime !== undefined && result.executionTime > 0) {
         console.log(`Execution Time: ${result.executionTime}ms`);
       }
 

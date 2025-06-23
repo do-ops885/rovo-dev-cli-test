@@ -10,7 +10,7 @@ export async function sparcCommand(
 ): Promise<void> {
   console.log(chalk.green(`Running SPARC agent in ${mode} mode...`));
 
-  if (!description) {
+  if (!description || description.trim() === "") {
     console.log(chalk.yellow("No task description provided."));
     return;
   }

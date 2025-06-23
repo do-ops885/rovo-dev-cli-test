@@ -27,7 +27,10 @@ export async function acliCommand(
       break;
 
     case "run":
-      if (options.instruction) {
+      if (
+        options.instruction !== undefined &&
+        options.instruction.trim() !== ""
+      ) {
         await acli.runWithInstruction(options.instruction);
       } else {
         await acli.runInteractive();

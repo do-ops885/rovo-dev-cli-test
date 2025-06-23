@@ -42,7 +42,7 @@ export async function agentCommand(
  * Spawn a new agent
  */
 async function spawnAgent(name?: string): Promise<void> {
-  if (!name) {
+  if (!name || name.trim() === "") {
     console.log(chalk.red("Error: Agent name is required for spawn action."));
     return;
   }
@@ -128,7 +128,7 @@ function listAgents(): void {
  * Kill an agent
  */
 function killAgent(name?: string): void {
-  if (!name) {
+  if (!name || name.trim() === "") {
     console.log(chalk.red("Error: Agent name is required for kill action."));
     return;
   }

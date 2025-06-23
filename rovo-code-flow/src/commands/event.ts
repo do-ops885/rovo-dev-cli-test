@@ -10,7 +10,7 @@ export async function eventCommand(
 ): Promise<void> {
   console.log(chalk.green(`Running Event Modeling agent with ${role} role...`));
 
-  if (!description) {
+  if (!description || description.trim() === "") {
     console.log(chalk.yellow("No task description provided."));
     return;
   }

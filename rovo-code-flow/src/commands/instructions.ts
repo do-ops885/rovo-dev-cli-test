@@ -46,19 +46,19 @@ export async function instructionsCommand(
   }
 
   // Handle add option
-  if (options.add) {
+  if (options.add === true) {
     await addInstruction();
     return;
   }
 
   // Handle remove option
-  if (options.remove) {
+  if (options.remove !== undefined && options.remove.trim() !== "") {
     await removeInstruction(options.remove);
     return;
   }
 
   // Handle run option
-  if (options.run) {
+  if (options.run !== undefined && options.run.trim() !== "") {
     await runInstruction(options.run);
     return;
   }

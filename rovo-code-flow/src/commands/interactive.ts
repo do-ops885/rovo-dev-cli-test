@@ -21,7 +21,10 @@ export async function interactiveCommand(
   console.log(chalk.blue("Starting Rovo Dev in interactive mode..."));
   console.log(chalk.green("Type / at any time to see available commands."));
 
-  if (options.initialPrompt) {
+  if (
+    options.initialPrompt !== undefined &&
+    options.initialPrompt.trim() !== ""
+  ) {
     console.log(chalk.yellow(`Initial prompt: ${options.initialPrompt}`));
 
     // Run the initial prompt

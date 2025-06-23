@@ -4,16 +4,18 @@
 
 import fs from "fs";
 import path from "path";
-import os from "os";
 import { ConfigValidationError } from "./errors";
+import { validatePath, createHomePath } from "./path-validator";
 
 export class Config {
   private configPath: string;
-  private config: Record<string, any> = {};
+  private config: Record<string, unknown> = {};
 
   constructor(configPath?: string) {
     this.configPath =
-      configPath || path.join(os.homedir(), ".rovo-code-flow", "config.json");
+      configPath !== undefined && configPath.trim() !== ""
+        ? validatePath(configPath)
+        : createHomePath(".rovo-code-flow/config.json");
     this.load();
   }
 
@@ -22,8 +24,9 @@ export class Config {
    */
   private load(): void {
     try {
-      if (fs.existsSync(this.configPath)) {
-        const data = fs.readFileSync(this.configPath, "utf8");
+      const safePath = validatePath(this.configPath);
+      if (fs.existsSync(safePath)) {
+        const data = fs.readFileSync(safePath, "utf8");
         try {
           this.config = JSON.parse(data);
         } catch (parseError) {
@@ -72,11 +75,12 @@ export class Config {
    */
   public save(): void {
     try {
-      const dir = path.dirname(this.configPath);
+      const safePath = validatePath(this.configPath);
+      const dir = path.dirname(safePath);
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(this.configPath, JSON.stringify(this.config, null, 2));
+      fs.writeFileSync(safePath, JSON.stringify(this.config, null, 2));
     } catch (error) {
       console.error("Error saving configuration:", error);
     }
@@ -85,15 +89,19 @@ export class Config {
   /**
    * Get a configuration value
    */
-  public get(key: string, defaultValue?: any): any {
+  public get(key: string, defaultValue?: unknown): unknown {
     const parts = key.split(".");
-    let current = this.config;
+    let current: unknown = this.config;
 
     for (const part of parts) {
-      if (current[part] === undefined) {
+      if (
+        typeof current !== "object" ||
+        current === null ||
+        !(part in current)
+      ) {
         return defaultValue;
       }
-      current = current[part];
+      current = (current as Record<string, unknown>)[part];
     }
 
     return current;
@@ -102,16 +110,16 @@ export class Config {
   /**
    * Set a configuration value
    */
-  public set(key: string, value: any): void {
+  public set(key: string, value: unknown): void {
     const parts = key.split(".");
-    let current = this.config;
+    let current: Record<string, unknown> = this.config;
 
     for (let i = 0; i < parts.length - 1; i++) {
       const part = parts[i];
-      if (current[part] === undefined) {
+      if (typeof current[part] !== "object" || current[part] === null) {
         current[part] = {};
       }
-      current = current[part];
+      current = current[part] as Record<string, unknown>;
     }
 
     current[parts[parts.length - 1]] = value;

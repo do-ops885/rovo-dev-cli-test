@@ -25,17 +25,24 @@ export class CoderAgent extends BaseSparcAgent {
 
     try {
       // Check if we have previous results from another agent
-      const previousResult = taskContext.metadata?.previousResult;
+      const previousResult = taskContext.metadata?.previousResult as
+        | TaskResult
+        | undefined;
       let requirements: Record<string, any>;
 
       // Step 1: Analyze requirements
-      if (previousResult && previousResult.artifacts?.events) {
+      if (
+        previousResult &&
+        previousResult.artifacts &&
+        typeof previousResult.artifacts === "object" &&
+        "events" in previousResult.artifacts
+      ) {
         // If we have events from a previous agent (like ModelerAgent),
         // use them to inform our requirements
         log("Using events from previous agent for requirements...", "info");
         requirements = await this.analyzeRequirementsFromEvents(
           taskContext.description,
-          previousResult.artifacts.events,
+          previousResult.artifacts.events as string[],
         );
       } else {
         // Otherwise, analyze requirements from scratch
@@ -62,7 +69,8 @@ export class CoderAgent extends BaseSparcAgent {
       // Step 5: Save code to files if requested
       if (taskContext.metadata?.saveToFiles) {
         log("Saving code to files...", "info");
-        const outputDir = taskContext.metadata.outputDir || "./generated-code";
+        const outputDir =
+          (taskContext.metadata.outputDir as string) || "./generated-code";
         await this.saveCodeToFiles(optimizedCode, outputDir);
       }
 

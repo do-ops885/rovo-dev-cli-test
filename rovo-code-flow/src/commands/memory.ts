@@ -19,9 +19,9 @@ export async function memoryCommand(
 
   // Determine target memory file
   let target: "global" | "local" | "repo" = "local";
-  if (options.global) {
+  if (options.global === true) {
     target = "global";
-  } else if (options.repo) {
+  } else if (options.repo === true) {
     target = "repo";
   }
 
@@ -33,7 +33,7 @@ export async function memoryCommand(
 
     case "add":
     case "store":
-      if (!key) {
+      if (!key || key.trim() === "") {
         console.log(
           chalk.red("Error: Note content is required for add action."),
         );
@@ -45,7 +45,7 @@ export async function memoryCommand(
 
     case "remove":
     case "delete":
-      if (!key) {
+      if (!key || key.trim() === "") {
         console.log(chalk.red("Error: Pattern is required for remove action."));
         return;
       }

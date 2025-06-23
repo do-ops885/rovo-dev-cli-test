@@ -48,7 +48,7 @@ export abstract class BaseSparcAgent implements Agent {
     await this.loadResources();
 
     // Initialize file lock manager if needed
-    if (this.config.useFileLocks) {
+    if (this.config.useFileLocks === true) {
       // Import Memory directly to avoid path issues in tests
       const memory = new Memory();
       this.fileLockManager = new FileLockManager(memory);
@@ -201,18 +201,22 @@ export abstract class BaseSparcAgent implements Agent {
    * Get agent metrics
    */
   public async getMetrics(): Promise<Record<string, any>> {
-    const completedTasks = this.taskHistory.filter((t) => t.endTime);
-    const successfulTasks = completedTasks.filter((t) => t.result?.success);
+    const completedTasks = this.taskHistory.filter(
+      (t) => t.endTime !== undefined,
+    );
+    const successfulTasks = completedTasks.filter(
+      (t) => t.result?.success === true,
+    );
 
     const totalExecutionTime = completedTasks.reduce((total, task) => {
-      if (task.endTime && task.startTime) {
+      if (task.endTime !== undefined && task.startTime !== undefined) {
         return total + (task.endTime.getTime() - task.startTime.getTime());
       }
       return total;
     }, 0);
 
     const averageExecutionTime =
-      completedTasks.length > 0
+      completedTasks.length > 0 && totalExecutionTime > 0
         ? totalExecutionTime / completedTasks.length
         : 0;
 

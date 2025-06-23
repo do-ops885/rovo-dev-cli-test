@@ -19,8 +19,8 @@ export async function startCommand(options: StartOptions): Promise<void> {
   // Start MCP servers
   startMcpServers();
 
-  if (options.ui) {
-    const port = options.port ? options.port.toString() : "3000";
+  if (options.ui === true) {
+    const port = options.port !== undefined ? options.port.toString() : "3000";
     console.log(chalk.blue(`Starting UI on port ${port}...`));
     await startUi(port);
   } else {

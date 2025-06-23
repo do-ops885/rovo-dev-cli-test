@@ -29,12 +29,19 @@ export class ModelerAgent extends BaseEventAgent {
 
     try {
       // Check if we have previous results from another agent
-      const previousResult = taskContext.metadata?.previousResult;
+      const previousResult = taskContext.metadata?.previousResult as
+        | TaskResult
+        | undefined;
       let domainContext: Record<string, any> = {};
 
       // Step 1: Analyze domain
       log("Analyzing domain...", "info");
-      if (previousResult && previousResult.artifacts?.requirements) {
+      if (
+        previousResult &&
+        previousResult.artifacts &&
+        typeof previousResult.artifacts === "object" &&
+        "requirements" in previousResult.artifacts
+      ) {
         // If we have requirements from a previous agent (like CoderAgent),
         // use them to inform our domain analysis
         log(
@@ -42,7 +49,7 @@ export class ModelerAgent extends BaseEventAgent {
           "info",
         );
         domainContext = this.extractDomainContextFromRequirements(
-          previousResult.artifacts.requirements,
+          previousResult.artifacts.requirements as Record<string, any>,
         );
       }
       await this.simulateWork(1000);
@@ -77,9 +84,10 @@ export class ModelerAgent extends BaseEventAgent {
       // Step 6: Save model to file if requested
       if (taskContext.metadata?.saveToFile) {
         log("Saving event model to file...", "info");
-        const outputDir = taskContext.metadata.outputDir || "./event-models";
+        const outputDir =
+          (taskContext.metadata.outputDir as string) || "./event-models";
         const fileName =
-          taskContext.metadata.fileName ||
+          (taskContext.metadata.fileName as string) ||
           `event-model-${new Date().toISOString().replace(/[:.]/g, "-")}.md`;
         await this.saveModelToFile(model, outputDir, fileName);
       }

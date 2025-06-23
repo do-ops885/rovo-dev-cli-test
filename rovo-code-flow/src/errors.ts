@@ -16,7 +16,7 @@ export class RovoError extends Error {
   /**
    * Additional context information about the error
    */
-  public context?: Record<string, any>;
+  public context?: Record<string, unknown>;
 
   /**
    * @param message - Error message
@@ -27,7 +27,7 @@ export class RovoError extends Error {
     options?: {
       cause?: Error;
       code?: string;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     },
   ) {
     super(message);
@@ -63,7 +63,7 @@ export class ConfigValidationError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     },
   ) {
     super(message, {
@@ -83,7 +83,7 @@ export class PluginLoadError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     },
   ) {
     super(message, {
@@ -103,7 +103,7 @@ export class ApiRequestError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
       statusCode?: number;
       endpoint?: string;
     },
@@ -130,7 +130,7 @@ export class LoggingError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     },
   ) {
     super(message, {
@@ -150,7 +150,7 @@ export class DocumentationError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
     },
   ) {
     super(message, {
@@ -170,7 +170,7 @@ export class FilePathValidationError extends RovoError {
     message: string,
     options?: {
       cause?: Error;
-      context?: Record<string, any>;
+      context?: Record<string, unknown>;
       path?: string;
     },
   ) {

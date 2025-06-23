@@ -27,19 +27,19 @@ export async function sessionsCommand(
   }
 
   // Handle clear option
-  if (options.clear) {
+  if (options.clear === true) {
     await clearSession();
     return;
   }
 
   // Handle prune option
-  if (options.prune) {
+  if (options.prune === true) {
     await pruneSession();
     return;
   }
 
   // Handle switch option
-  if (options.switch) {
+  if (options.switch !== undefined && options.switch.trim() !== "") {
     await switchSession(options.switch);
     return;
   }

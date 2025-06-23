@@ -22,9 +22,9 @@ export async function feedbackCommand(
   // Determine feedback type
   let feedbackType = "general";
 
-  if (options.bug) {
+  if (options.bug === true) {
     feedbackType = "bug";
-  } else if (options.feature) {
+  } else if (options.feature === true) {
     feedbackType = "feature";
   } else {
     const { type } = await inquirer.prompt([

@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "name": "Create React Component",
+    "instruction": "Create a React functional component with TypeScript that accepts props and includes basic styling",
+    "category": "development",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": 2,
+    "name": "Write Unit Tests",
+    "instruction": "Write comprehensive unit tests for the given function using Jest and include edge cases",
+    "category": "testing",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": 3,
+    "name": "API Documentation",
+    "instruction": "Generate OpenAPI documentation for the REST API endpoints with examples and error responses",
+    "category": "documentation",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": 4,
+    "name": "Database Migration",
+    "instruction": "Create a database migration script to add new tables and update existing schema",
+    "category": "database",
+    "created": "2024-01-01T00:00:00Z"
+  },
+  {
+    "id": 5,
+    "name": "Security Review",
+    "instruction": "Perform a security review of the authentication system and identify potential vulnerabilities",
+    "category": "security",
+    "created": "2024-01-01T00:00:00Z"
+  }
+]

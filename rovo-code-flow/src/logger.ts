@@ -67,35 +67,35 @@ export class Logger {
   /**
    * Log a debug message
    */
-  public debug(message: string, ...args: any[]): void {
+  public debug(message: string, ...args: unknown[]): void {
     this.log(LogLevel.DEBUG, message, ...args);
   }
 
   /**
    * Log an info message
    */
-  public info(message: string, ...args: any[]): void {
+  public info(message: string, ...args: unknown[]): void {
     this.log(LogLevel.INFO, message, ...args);
   }
 
   /**
    * Log a warning message
    */
-  public warn(message: string, ...args: any[]): void {
+  public warn(message: string, ...args: unknown[]): void {
     this.log(LogLevel.WARN, message, ...args);
   }
 
   /**
    * Log an error message
    */
-  public error(message: string, ...args: any[]): void {
+  public error(message: string, ...args: unknown[]): void {
     this.log(LogLevel.ERROR, message, ...args);
   }
 
   /**
    * Log a message with a specific level
    */
-  private log(level: LogLevel, message: string, ...args: any[]): void {
+  private log(level: LogLevel, message: string, ...args: unknown[]): void {
     if (level < this.level) {
       return;
     }
