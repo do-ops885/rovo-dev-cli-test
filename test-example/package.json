@@ -13,6 +13,9 @@
     "test:utility": "node test-runner.js --category utility",
     "test:verbose": "node test-runner.js --verbose",
     "test:dry-run": "node test-runner.js --dry-run",
+    "calculator:workflow": "./calculator-development-workflow.sh",
+    "calculator:workflow:dry-run": "./calculator-development-workflow.sh --dry-run",
+    "calculator:test": "node test-calculator-workflow.js",
     "clean": "rm -rf results/* test-workspace/.sparc test-workspace/.event-modeling test-workspace/.agent.md test-workspace/.agent.local.md"
   },
   "dependencies": {

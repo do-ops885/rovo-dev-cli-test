@@ -2,6 +2,8 @@
 
 Multi-agent orchestration CLI for Rovo Dev, blending SPARC and Event Modeling methodologies for advanced AI-powered development workflows.
 
+WIP!
+
 ## Features
 
 - **Agent Orchestration**: Combine SPARC modes and Event Modeling roles
