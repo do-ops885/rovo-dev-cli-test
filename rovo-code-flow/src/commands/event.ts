@@ -3,6 +3,7 @@ import { ModelerAgent } from "../agents/event/modeler-agent";
 import { Orchestrator } from "../orchestrator";
 import type { TaskContext } from "../agents/agent.interface";
 import { AcliIntegration } from "../acli-integration";
+import { workflowTracker } from "../workflow-tracker";
 
 export async function eventCommand(
   role: string,
@@ -29,6 +30,9 @@ export async function eventCommand(
   const orchestrator = new Orchestrator();
   orchestrator.start();
 
+  const startTime = Date.now();
+  let success = false;
+
   try {
     // Create task context
     const taskContext: TaskContext = {
@@ -52,6 +56,7 @@ export async function eventCommand(
       const result = await agent.executeTask(taskContext);
 
       if (result.success) {
+        success = true;
         console.log(chalk.green(`Task completed: ${result.message}`));
 
         // If we have artifacts, display them
@@ -84,10 +89,24 @@ export async function eventCommand(
       const instruction = `Act as an Event Modeling ${role} and ${description}`;
 
       await acli.runWithInstruction(instruction);
+      success = true; // Assume success if no error thrown
     }
   } catch (error) {
     console.error(chalk.red("Error executing Event Modeling agent:"), error);
   } finally {
+    // Track workflow progress
+    const duration = Date.now() - startTime;
+    await workflowTracker.trackCommand(
+      "event",
+      role,
+      description,
+      success,
+      duration,
+    );
+
+    // Show workflow suggestions
+    await workflowTracker.autoSuggestNext();
+
     // Stop orchestrator
     orchestrator.stop();
   }

@@ -16,6 +16,7 @@ import { instructionsCommand } from "./commands/instructions";
 import { feedbackCommand } from "./commands/feedback";
 import { interactiveCommand } from "./commands/interactive";
 import { mcpCommand } from "./commands/mcp";
+import { workflowCommand } from "./commands/workflow";
 import chalk from "chalk";
 
 // Define color themes for command categories
@@ -69,7 +70,9 @@ program
 program
   .command("status")
   .description(colors.system("Show system health and metrics"))
-  .action(statusCommand);
+  .action(async () => {
+    await statusCommand();
+  });
 
 // SPARC command (Agent)
 program
@@ -188,6 +191,23 @@ program
   .option("--remove <n>", "Remove an MCP server")
   .action(mcpCommand);
 
+// Workflow command (Core)
+program
+  .command("workflow")
+  .description(colors.core("Workflow management and phase tracking"))
+  .argument(
+    "<action>",
+    "Action to perform (init, start, status, resume, complete, skip, reset, pause, templates, phases, validate, run)",
+  )
+  .argument("[target]", "Target (template-id, phase-id, etc.)")
+  .option("--template <template>", "Workflow template ID")
+  .option("--phase <phase>", "Specific phase ID")
+  .option("--force", "Force action without confirmation")
+  .option("--interactive", "Run in interactive mode")
+  .option("--dry-run", "Show what would be executed without running commands")
+  .option("--parallel", "Execute commands in parallel where possible")
+  .action(workflowCommand);
+
 // Display header with version
 console.log(
   chalk.blue.bold("\nðŸ¤– Rovo Code Flow - Multi-agent orchestration CLI"),
@@ -198,7 +218,7 @@ console.log(
 // Display command categories
 console.log(
   colors.core("Core Commands:") +
-    " init, start, interactive\n" +
+    " init, start, interactive, workflow\n" +
     colors.agent("Agent Commands:") +
     " sparc, event, agent, swarm\n" +
     colors.system("System Commands:") +

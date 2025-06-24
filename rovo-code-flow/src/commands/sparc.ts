@@ -3,6 +3,7 @@ import { CoderAgent } from "../agents/sparc/coder-agent";
 import { Orchestrator } from "../orchestrator";
 import type { TaskContext } from "../agents/agent.interface";
 import { AcliIntegration } from "../acli-integration";
+import { workflowTracker } from "../workflow-tracker";
 
 export async function sparcCommand(
   mode: string,
@@ -27,6 +28,9 @@ export async function sparcCommand(
   const orchestrator = new Orchestrator();
   orchestrator.start();
 
+  const startTime = Date.now();
+  let success = false;
+
   try {
     // Create task context
     const taskContext: TaskContext = {
@@ -50,6 +54,7 @@ export async function sparcCommand(
       const result = await agent.executeTask(taskContext);
 
       if (result.success) {
+        success = true;
         console.log(chalk.green(`Task completed: ${result.message}`));
 
         // If we have artifacts, display them
@@ -82,10 +87,24 @@ export async function sparcCommand(
       const instruction = `Act as a ${mode} and ${description}`;
 
       await acli.runWithInstruction(instruction);
+      success = true; // Assume success if no error thrown
     }
   } catch (error) {
     console.error(chalk.red("Error executing SPARC agent:"), error);
   } finally {
+    // Track workflow progress
+    const duration = Date.now() - startTime;
+    await workflowTracker.trackCommand(
+      "sparc",
+      mode,
+      description,
+      success,
+      duration,
+    );
+
+    // Show workflow suggestions
+    await workflowTracker.autoSuggestNext();
+
     // Stop orchestrator
     orchestrator.stop();
   }
