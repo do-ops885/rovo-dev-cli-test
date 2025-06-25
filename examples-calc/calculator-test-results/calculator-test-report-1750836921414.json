@@ -1,0 +1,70 @@
+{
+  "summary": {
+    "total": 3,
+    "passed": 0,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 3,
+    "successRate": 0,
+    "duration": 3,
+    "timestamp": "2025-06-25T07:35:21.414Z"
+  },
+  "results": [
+    {
+      "name": "init-calculator-project",
+      "status": "skipped",
+      "command": "node ../rovo-code-flow/dist/cli.js init --sparc --event",
+      "duration": 0
+    },
+    {
+      "name": "setup-project-memory",
+      "status": "skipped",
+      "command": "node ../rovo-code-flow/dist/cli.js memory add Building a modern calculator with React and TypeScript --repo",
+      "duration": 0
+    },
+    {
+      "name": "workflow-init-calculator",
+      "status": "skipped",
+      "command": "node ../rovo-code-flow/dist/cli.js workflow init",
+      "duration": 0
+    }
+  ],
+  "categories": [
+    {
+      "name": "setup",
+      "tests": 3
+    },
+    {
+      "name": "architecture",
+      "tests": 3
+    },
+    {
+      "name": "modeling",
+      "tests": 3
+    },
+    {
+      "name": "testing",
+      "tests": 3
+    },
+    {
+      "name": "implementation",
+      "tests": 3
+    },
+    {
+      "name": "quality",
+      "tests": 2
+    },
+    {
+      "name": "deployment",
+      "tests": 1
+    },
+    {
+      "name": "coordination",
+      "tests": 3
+    },
+    {
+      "name": "monitoring",
+      "tests": 3
+    }
+  ]
+}

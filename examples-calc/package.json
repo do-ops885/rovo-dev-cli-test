@@ -1,0 +1,22 @@
+{
+  "name": "calculator-example",
+  "version": "1.0.0",
+  "description": "Example calculator project for rovo-code-flow",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-calculator-workflow.js",
+    "test:enhanced": "node enhanced-calculator-tests.js",
+    "test:enhanced:dry": "node enhanced-calculator-tests.js --dry-run",
+    "test:enhanced:parallel": "node enhanced-calculator-tests.js --parallel",
+    "test:enhanced:setup": "node enhanced-calculator-tests.js --category setup",
+    "test:enhanced:arch": "node enhanced-calculator-tests.js --category architecture",
+    "test:enhanced:demo": "./run-enhanced-tests.sh"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

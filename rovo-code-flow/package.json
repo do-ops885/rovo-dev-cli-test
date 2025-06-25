@@ -1,7 +1,8 @@
 {
   "name": "rovo-code-flow",
   "version": "0.1.0",
-  "description": "Multi‑agent orchestration CLI for Rovo Dev — combining SPARC & Event Modeling",
+  "type": "commonjs",
+  "description": "Multi-agent orchestration CLI for Rovo Dev - combining SPARC & Event Modeling",
   "author": "d.o.",
   "license": "ISC",
   "main": "dist/cli.js",

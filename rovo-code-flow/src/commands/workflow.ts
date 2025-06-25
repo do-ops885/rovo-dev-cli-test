@@ -508,7 +508,8 @@ async function completePhase(
 async function skipPhase(
   workflowManager: WorkflowManager,
   phaseId?: string,
-  options: WorkflowOptions = {},
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _options?: WorkflowOptions,
 ): Promise<void> {
   if (!phaseId) {
     console.log(chalk.red("Phase ID is required"));
@@ -825,11 +826,9 @@ async function executeCommand(
       timeout,
     });
 
-    let stdout = "";
     let stderr = "";
 
     child.stdout?.on("data", (data) => {
-      stdout += data.toString();
       process.stdout.write(data);
     });
 

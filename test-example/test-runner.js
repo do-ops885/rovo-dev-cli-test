@@ -53,6 +53,37 @@ const TEST_CATEGORIES = {
       description: 'Start interactive mode with initial prompt',
       timeout: 10000,
       input: '/exit\n'
+    },
+    {
+      name: 'workflow-init',
+      command: 'workflow',
+      args: ['init'],
+      description: 'Initialize workflow management system',
+      timeout: 5000
+    },
+    {
+      name: 'workflow-templates',
+      command: 'workflow',
+      args: ['templates'],
+      description: 'List available workflow templates',
+      timeout: 5000,
+      dependsOn: ['workflow-init']
+    },
+    {
+      name: 'workflow-start',
+      command: 'workflow',
+      args: ['start', 'development'],
+      description: 'Start a workflow with the development template',
+      timeout: 5000,
+      dependsOn: ['workflow-init']
+    },
+    {
+      name: 'workflow-status',
+      command: 'workflow',
+      args: ['status'],
+      description: 'Show current workflow status',
+      timeout: 5000,
+      dependsOn: ['workflow-start']
     }
   ],
   agent: [
@@ -284,8 +315,12 @@ class TestRunner {
     this.verbose = options.verbose || false;
     this.dryRun = options.dryRun || false;
     this.category = options.category || null;
+    this.filter = options.filter || null;
+    this.parallel = options.parallel || false;
+    this.retries = options.retries || 0;
     this.results = [];
     this.startTime = Date.now();
+    this.completedTests = new Set();
   }
 
   async setup() {
@@ -320,8 +355,50 @@ class TestRunner {
     }
   }
 
-  async runTest(test) {
+  async runTest(test, retriesLeft = this.retries) {
     const testName = `${test.name}`;
+    
+    // Skip if test has already been run
+    if (this.completedTests.has(testName)) {
+      return;
+    }
+    
+    // Check if this test has dependencies
+    if (test.dependsOn && test.dependsOn.length > 0) {
+      for (const dependency of test.dependsOn) {
+        // Find the dependency test
+        let dependencyTest = null;
+        for (const [category, tests] of Object.entries(TEST_CATEGORIES)) {
+          const found = tests.find(t => t.name === dependency);
+          if (found) {
+            dependencyTest = found;
+            break;
+          }
+        }
+        
+        if (dependencyTest) {
+          // Check if dependency has been run
+          if (!this.completedTests.has(dependency)) {
+            console.log(chalk.blue(`   Running dependency: ${dependency} for ${testName}`));
+            await this.runTest(dependencyTest);
+          }
+          
+          // Check if dependency passed
+          const dependencyResult = this.results.find(r => r.name === dependency);
+          if (!dependencyResult || dependencyResult.status !== 'passed') {
+            console.log(chalk.yellow(`   Skipping ${testName} because dependency ${dependency} did not pass`));
+            this.results.push({
+              name: testName,
+              status: 'skipped',
+              duration: 0,
+              reason: `Dependency ${dependency} did not pass`
+            });
+            return;
+          }
+        }
+      }
+    }
+    
     console.log(chalk.yellow(`\nRunning test: ${testName}`));
     console.log(chalk.gray(`   Description: ${test.description}`));
 
@@ -334,6 +411,7 @@ class TestRunner {
         command,
         duration: 0
       });
+      this.completedTests.add(testName);
       return;
     }
 
@@ -351,7 +429,14 @@ class TestRunner {
           duration,
           output: result.output
         });
+        this.completedTests.add(testName);
       } else {
+        // Retry if we have retries left
+        if (retriesLeft > 0) {
+          console.log(chalk.yellow(`   FAILED - Retrying (${retriesLeft} retries left)`));
+          return this.runTest(test, retriesLeft - 1);
+        }
+        
         console.log(chalk.red(`   FAILED (${duration}ms)`));
         console.log(chalk.red(`   Error: ${result.error}`));
         this.results.push({
@@ -361,8 +446,15 @@ class TestRunner {
           error: result.error,
           output: result.output
         });
+        this.completedTests.add(testName);
       }
     } catch (error) {
+      // Retry if we have retries left
+      if (retriesLeft > 0) {
+        console.log(chalk.yellow(`   ERROR - Retrying (${retriesLeft} retries left)`));
+        return this.runTest(test, retriesLeft - 1);
+      }
+      
       const duration = Date.now() - startTime;
       console.log(chalk.red(`   ERROR (${duration}ms)`));
       console.log(chalk.red(`   Error: ${error.message}`));
@@ -372,6 +464,7 @@ class TestRunner {
         duration,
         error: error.message
       });
+      this.completedTests.add(testName);
     }
   }
 
@@ -463,10 +556,27 @@ class TestRunner {
       return;
     }
 
-    console.log(chalk.blue(`\nRunning ${categoryName.toUpperCase()} tests (${tests.length} tests)`));
+    // Filter tests if a filter is provided
+    let filteredTests = tests;
+    if (this.filter) {
+      const filterRegex = new RegExp(this.filter, 'i');
+      filteredTests = tests.filter(test => 
+        filterRegex.test(test.name) || filterRegex.test(test.description)
+      );
+      console.log(chalk.blue(`\nRunning ${categoryName.toUpperCase()} tests matching "${this.filter}" (${filteredTests.length}/${tests.length} tests)`));
+    } else {
+      console.log(chalk.blue(`\nRunning ${categoryName.toUpperCase()} tests (${tests.length} tests)`));
+    }
     
-    for (const test of tests) {
-      await this.runTest(test);
+    if (this.parallel && !this.dryRun) {
+      // Run tests in parallel
+      const promises = filteredTests.map(test => this.runTest(test));
+      await Promise.all(promises);
+    } else {
+      // Run tests sequentially
+      for (const test of filteredTests) {
+        await this.runTest(test);
+      }
     }
   }
 
@@ -537,8 +647,11 @@ program
   .description('Comprehensive test runner for rovo-code-flow CLI')
   .version('1.0.0')
   .option('-c, --category <category>', 'Run tests for specific category (core, agent, system, tools, utility)')
+  .option('-f, --filter <pattern>', 'Filter tests by name or description')
   .option('-v, --verbose', 'Enable verbose output')
   .option('-d, --dry-run', 'Show commands without executing them')
+  .option('-p, --parallel', 'Run tests in parallel')
+  .option('-r, --retries <number>', 'Number of retries for failed tests', '0')
   .action(async (options) => {
     const runner = new TestRunner(options);
     

@@ -1,0 +1,85 @@
+{
+  "summary": {
+    "total": 5,
+    "passed": 0,
+    "failed": 3,
+    "errors": 0,
+    "skipped": 2,
+    "successRate": 0,
+    "duration": 88,
+    "timestamp": "2025-06-25T07:36:19.766Z"
+  },
+  "results": [
+    {
+      "name": "init-calculator-project",
+      "status": "failed",
+      "duration": 28,
+      "error": "Command exited with code 1",
+      "output": "..."
+    },
+    {
+      "name": "init-calculator-project",
+      "status": "failed",
+      "duration": 27,
+      "error": "Command exited with code 1",
+      "output": "..."
+    },
+    {
+      "name": "setup-project-memory",
+      "status": "skipped",
+      "duration": 0,
+      "reason": "Dependency init-calculator-project failed"
+    },
+    {
+      "name": "init-calculator-project",
+      "status": "failed",
+      "duration": 30,
+      "error": "Command exited with code 1",
+      "output": "..."
+    },
+    {
+      "name": "workflow-init-calculator",
+      "status": "skipped",
+      "duration": 0,
+      "reason": "Dependency init-calculator-project failed"
+    }
+  ],
+  "categories": [
+    {
+      "name": "setup",
+      "tests": 3
+    },
+    {
+      "name": "architecture",
+      "tests": 3
+    },
+    {
+      "name": "modeling",
+      "tests": 3
+    },
+    {
+      "name": "testing",
+      "tests": 3
+    },
+    {
+      "name": "implementation",
+      "tests": 3
+    },
+    {
+      "name": "quality",
+      "tests": 2
+    },
+    {
+      "name": "deployment",
+      "tests": 1
+    },
+    {
+      "name": "coordination",
+      "tests": 3
+    },
+    {
+      "name": "monitoring",
+      "tests": 3
+    }
+  ]
+}

@@ -1,11 +1,11 @@
-import eslintPluginTs from '@typescript-eslint/eslint-plugin';
-import eslintParserTs from '@typescript-eslint/parser';
-import eslintPluginSecurity from 'eslint-plugin-security';
-import prettierConfig from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
+const eslintPluginTs = require('@typescript-eslint/eslint-plugin');
+const eslintParserTs = require('@typescript-eslint/parser');
+const eslintPluginSecurity = require('eslint-plugin-security');
+const prettierConfig = require('eslint-config-prettier');
+const prettierPlugin = require('eslint-plugin-prettier');
 
 /** @type {import("eslint").Linter.FlatConfig} */
-export default [
+module.exports = [
   {
     files: ['**/*.ts'],
     languageOptions: {

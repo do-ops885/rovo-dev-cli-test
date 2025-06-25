@@ -47,6 +47,7 @@ test-example/
 - **init**: Initialize with SPARC/Event Modeling modes
 - **start**: Start orchestrator with UI options
 - **interactive**: Interactive mode with prompts
+- **workflow**: Workflow management and phase tracking
 
 ### Agent Commands (`npm run test:agent`)
 - **sparc**: All SPARC modes (architect, coder, tdd, security, devops)
@@ -78,8 +79,11 @@ npm run test:agent         # Agent commands only
 npm run test:system        # System commands only
 npm run test:tools         # Tool commands only
 npm run test:utility       # Utility commands only
+npm run test:workflow      # Workflow commands only
 npm run test:verbose       # Verbose output
 npm run test:dry-run       # Preview without execution
+npm run test:parallel      # Run tests in parallel
+npm run test:retry         # Run with automatic retries
 
 # Utilities
 node validate.js           # Validate setup

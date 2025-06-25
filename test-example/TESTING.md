@@ -17,6 +17,21 @@ npm run test:core
 
 ## Test Categories
 
+### Advanced Test Features
+
+The test runner includes several advanced features:
+
+1. **Test Dependencies**: Tests can specify dependencies on other tests using the `dependsOn` property. Dependent tests will only run if their dependencies pass.
+
+2. **Parallel Execution**: Tests can be run in parallel using the `--parallel` flag for faster execution.
+
+3. **Test Filtering**: Tests can be filtered by name or description using the `--filter` option.
+
+4. **Automatic Retries**: Failed tests can be automatically retried using the `--retries` option.
+
+5. **Detailed Reporting**: Test results are saved to JSON files with detailed information about each test run.
+
+
 ### 1. Core Commands (`npm run test:core`)
 
 Tests fundamental CLI operations:
