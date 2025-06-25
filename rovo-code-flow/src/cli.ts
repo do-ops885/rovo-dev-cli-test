@@ -204,6 +204,7 @@ program
   .option("--phase <phase>", "Specific phase ID")
   .option("--force", "Force action without confirmation")
   .option("--interactive", "Run in interactive mode")
+  .option("--non-interactive", "Run in non-interactive mode (no prompts)")
   .option("--dry-run", "Show what would be executed without running commands")
   .option("--parallel", "Execute commands in parallel where possible")
   .action(workflowCommand);

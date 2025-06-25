@@ -14,6 +14,7 @@ interface WorkflowOptions {
   phase?: string;
   force?: boolean;
   interactive?: boolean;
+  nonInteractive?: boolean;
   dryRun?: boolean;
   parallel?: boolean;
 }
@@ -23,6 +24,11 @@ export async function workflowCommand(
   target?: string,
   options: WorkflowOptions = {},
 ): Promise<void> {
+  // Handle non-interactive flag
+  if (options.nonInteractive) {
+    options.interactive = false;
+  }
+
   const workflowManager = new WorkflowManager();
 
   switch (action) {
@@ -118,19 +124,34 @@ async function startWorkflow(
   // Check if there's already an active workflow
   const currentState = await workflowManager.getCurrentWorkflowState();
   if (currentState && currentState.status === "in-progress") {
-    const { proceed } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "proceed",
-        message:
-          "There's already an active workflow. Do you want to start a new one?",
-        default: false,
-      },
-    ]);
-
-    if (!proceed) {
-      console.log(chalk.yellow("Workflow start cancelled"));
+    if (options.force) {
+      console.log(
+        chalk.yellow(
+          "Forcing new workflow start (existing workflow will be replaced)",
+        ),
+      );
+    } else if (options.interactive === false) {
+      console.log(
+        chalk.yellow(
+          "There's already an active workflow. Use --force to replace it or 'workflow resume' to continue.",
+        ),
+      );
       return;
+    } else {
+      const { proceed } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "proceed",
+          message:
+            "There's already an active workflow. Do you want to start a new one?",
+          default: false,
+        },
+      ]);
+
+      if (!proceed) {
+        console.log(chalk.yellow("Workflow start cancelled"));
+        return;
+      }
     }
   }
 
@@ -146,19 +167,25 @@ async function startWorkflow(
       return;
     }
 
-    const { selectedTemplate } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "selectedTemplate",
-        message: "Select a workflow template:",
-        choices: templates.map((t) => ({
-          name: `${t.name} - ${t.description}`,
-          value: t.id,
-        })),
-      },
-    ]);
+    if (options.interactive === false) {
+      // In non-interactive mode, use the first available template
+      templateId = templates[0].id;
+      console.log(chalk.blue(`Auto-selecting template: ${templates[0].name}`));
+    } else {
+      const { selectedTemplate } = await inquirer.prompt([
+        {
+          type: "list",
+          name: "selectedTemplate",
+          message: "Select a workflow template:",
+          choices: templates.map((t) => ({
+            name: `${t.name} - ${t.description}`,
+            value: t.id,
+          })),
+        },
+      ]);
 
-    templateId = selectedTemplate;
+      templateId = selectedTemplate;
+    }
   }
 
   try {
@@ -168,7 +195,15 @@ async function startWorkflow(
     await showWorkflowOverview(workflowManager);
 
     // Ask if user wants to start immediately
-    if (options.interactive !== false) {
+    if (options.interactive === false) {
+      // In non-interactive mode, automatically start the workflow
+      console.log(
+        chalk.blue(
+          "Starting workflow execution automatically (non-interactive mode)",
+        ),
+      );
+      await resumeWorkflow(workflowManager, undefined, options);
+    } else {
       const { startNow } = await inquirer.prompt([
         {
           type: "confirm",
@@ -416,17 +451,27 @@ async function resumeWorkflow(
       // Check if there's a next phase
       const updatedProgress = await workflowManager.getWorkflowProgress();
       if (updatedProgress.progress.nextPhase) {
-        const { continueNext } = await inquirer.prompt([
-          {
-            type: "confirm",
-            name: "continueNext",
-            message: `Continue with next phase: "${updatedProgress.progress.nextPhase.name}"?`,
-            default: true,
-          },
-        ]);
-
-        if (continueNext) {
+        if (options.interactive === false) {
+          // In non-interactive mode, automatically continue to next phase
+          console.log(
+            chalk.blue(
+              `Automatically continuing to next phase: "${updatedProgress.progress.nextPhase.name}"`,
+            ),
+          );
           await resumeWorkflow(workflowManager, undefined, options);
+        } else {
+          const { continueNext } = await inquirer.prompt([
+            {
+              type: "confirm",
+              name: "continueNext",
+              message: `Continue with next phase: "${updatedProgress.progress.nextPhase.name}"?`,
+              default: true,
+            },
+          ]);
+
+          if (continueNext) {
+            await resumeWorkflow(workflowManager, undefined, options);
+          }
         }
       } else if (updatedProgress.progress.remainingPhases === 0) {
         console.log(
@@ -484,18 +529,27 @@ async function completePhase(
   }
 
   if (!options.force) {
-    const { confirm } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "confirm",
-        message: `Mark phase "${phase.name}" as completed?`,
-        default: false,
-      },
-    ]);
-
-    if (!confirm) {
-      console.log(chalk.yellow("Operation cancelled"));
+    if (options.interactive === false) {
+      console.log(
+        chalk.yellow(
+          "Cannot complete phase in non-interactive mode without --force flag",
+        ),
+      );
       return;
+    } else {
+      const { confirm } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message: `Mark phase "${phase.name}" as completed?`,
+          default: false,
+        },
+      ]);
+
+      if (!confirm) {
+        console.log(chalk.yellow("Operation cancelled"));
+        return;
+      }
     }
   }
 
@@ -508,8 +562,7 @@ async function completePhase(
 async function skipPhase(
   workflowManager: WorkflowManager,
   phaseId?: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _options?: WorkflowOptions,
+  options: WorkflowOptions = {},
 ): Promise<void> {
   if (!phaseId) {
     console.log(chalk.red("Phase ID is required"));
@@ -528,14 +581,26 @@ async function skipPhase(
     return;
   }
 
-  const { reason } = await inquirer.prompt([
-    {
-      type: "input",
-      name: "reason",
-      message: `Reason for skipping "${phase.name}":`,
-      validate: (input) => input.trim().length > 0 || "Reason is required",
-    },
-  ]);
+  let reason: string;
+
+  if (options.interactive === false) {
+    reason = "Skipped in non-interactive mode";
+    console.log(
+      chalk.yellow(
+        `Skipping phase "${phase.name}" with default reason: ${reason}`,
+      ),
+    );
+  } else {
+    const response = await inquirer.prompt([
+      {
+        type: "input",
+        name: "reason",
+        message: `Reason for skipping "${phase.name}":`,
+        validate: (input) => input.trim().length > 0 || "Reason is required",
+      },
+    ]);
+    reason = response.reason;
+  }
 
   await workflowManager.skipPhase(phaseId, reason);
 }
@@ -548,19 +613,28 @@ async function resetWorkflow(
   workflowOptions: WorkflowOptions = {},
 ): Promise<void> {
   if (!workflowOptions.force) {
-    const { confirm } = await inquirer.prompt([
-      {
-        type: "confirm",
-        name: "confirm",
-        message:
-          "Are you sure you want to reset the workflow? This will lose all progress.",
-        default: false,
-      },
-    ]);
-
-    if (!confirm) {
-      console.log(chalk.yellow("Reset cancelled"));
+    if (workflowOptions.interactive === false) {
+      console.log(
+        chalk.yellow(
+          "Cannot reset workflow in non-interactive mode without --force flag",
+        ),
+      );
       return;
+    } else {
+      const { confirm } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message:
+            "Are you sure you want to reset the workflow? This will lose all progress.",
+          default: false,
+        },
+      ]);
+
+      if (!confirm) {
+        console.log(chalk.yellow("Reset cancelled"));
+        return;
+      }
     }
   }
 
